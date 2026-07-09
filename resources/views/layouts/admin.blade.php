@@ -35,11 +35,11 @@
             <div class="flex items-center gap-2">
                 <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
                 <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
-                <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-600">{{ ucfirst(auth()->user()->role) }}</span>
+                <span class="rounded-sm bg-gray-100 px-3 py-0.5 text-xs text-gray-600">{{ ucfirst(auth()->user()->role) }}</span>
             </div>
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" class="w-auto rounded-lg bg-gray-800 px-3.5 py-1.5 text-sm text-white hover:bg-gray-900">Logout</button>
+                <button type="submit" class="w-auto rounded-lg bg-gray-800 px-4 py-1.5 text-sm text-white hover:bg-gray-900">Logout</button>
             </form>
         </header>
         <main class="flex-1 p-6">

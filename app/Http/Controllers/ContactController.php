@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contact;
+use App\Models\User;
 use App\Models\WhatsappMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -13,8 +14,10 @@ class ContactController extends Controller
     {
         $totalContacts = Contact::count();
         $sentMessagesCount = Contact::whereNotNull('message_sent_at')->count();
+        $totalUsers = User::count();
+        $totalMessages = WhatsappMessage::count();
 
-        return view('admin.dashboard', compact('totalContacts', 'sentMessagesCount'));
+        return view('admin.dashboard', compact('totalContacts', 'sentMessagesCount', 'totalUsers', 'totalMessages'));
     }
 
     public function whatsapp()

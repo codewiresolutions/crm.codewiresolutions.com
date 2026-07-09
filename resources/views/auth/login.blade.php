@@ -3,7 +3,7 @@
 @section('title', 'Login')
 
 @section('content')
-    <form action="{{ route('login') }}" method="POST">
+    <form action="{{ route('login') }}" method="POST" class="">
         @csrf
         <label class="mb-1 block text-sm font-medium text-gray-700">Email</label>
         <input type="email" name="email" value="{{ old('email') }}" required autofocus class="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2.5">

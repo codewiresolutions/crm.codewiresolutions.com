@@ -7,7 +7,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="m-0 flex min-h-screen items-center justify-center bg-slate-50 font-sans text-gray-900 antialiased">
-    <div class="w-full max-w-md rounded-xl bg-white p-8 shadow-sm">
+    <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-sm">
         <h2 class="m-0 mb-6 text-center text-xl font-semibold">CRM</h2>
 
         @if(session('success'))

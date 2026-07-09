@@ -44,7 +44,8 @@
         @if($messages->isEmpty())
             <p class="text-sm text-gray-500">No messages saved yet.</p>
         @else
-            <table class="w-full border-collapse">
+            <input type="text" id="messageSearch" placeholder="Search messages..." onkeyup="filterMessages()" class="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2.5">
+            <table id="messagesTable" class="w-full border-collapse">
                 <thead>
                     <tr>
                         <th class="border-b border-gray-200 p-2.5 text-left">Title</th>
@@ -99,6 +100,14 @@
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') closeMessageModal();
         });
+
+        function filterMessages() {
+            var query = document.getElementById('messageSearch').value.trim().toLowerCase();
+            var rows = document.querySelectorAll('#messagesTable tbody tr');
+            rows.forEach(function (row) {
+                row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
+            });
+        }
 
         function confirmDeleteMessage(event) {
             event.preventDefault();
