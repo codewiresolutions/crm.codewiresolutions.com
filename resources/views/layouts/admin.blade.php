@@ -4,76 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Admin')</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #222; }
-        .layout { display: flex; min-height: 100vh; }
-        .sidebar { width: 240px; background: #1f2937; color: #fff; padding: 24px 16px; }
-        .sidebar a { display: block; color: #d1d5db; text-decoration: none; padding: 10px 12px; margin-bottom: 8px; border-radius: 8px; }
-        .sidebar a.active, .sidebar a:hover { background: #374151; color: #fff; }
-        .content { flex: 1; padding: 24px; }
-        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 16px; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 20px; }
-        .stat { background: #fff; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
-        input, textarea, select, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 8px; border: 1px solid #d1d5db; }
-        button { background: #2563eb; color: #fff; border: none; cursor: pointer; }
-        .muted { color: #6b7280; font-size: 13px; }
-        .alert { padding: 12px; border-radius: 8px; margin-bottom: 16px; }
-        .alert-success { background: #ecfdf3; color: #047857; }
-        .alert-error { background: #fef2f2; color: #b91c1c; }
-
-        /* Icon action buttons */
-        .actions { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-        .icon-btn {
-            width: 34px;
-            height: 34px;
-            padding: 0;
-            margin: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            border: 1px solid transparent;
-            cursor: pointer;
-            text-decoration: none;
-            background: transparent;
-            transition: background 0.15s ease, transform 0.1s ease;
-        }
-        .icon-btn:hover { transform: translateY(-1px); }
-        .icon-btn svg { width: 18px; height: 18px; pointer-events: none; }
-
-        .icon-btn.edit { color: #2563eb; }
-        .icon-btn.edit:hover { background: #eff6ff; }
-
-        .icon-btn.whatsapp { color: #16a34a; }
-        .icon-btn.whatsapp:hover { background: #ecfdf3; }
-
-        .icon-btn.delete { color: #dc2626; }
-        .icon-btn.delete:hover { background: #fef2f2; }
-
-        @yield('styles')
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @yield('styles')
 </head>
-<body>
-<div class="layout">
-    <aside class="sidebar">
-        <h2 style="padding: 10px 12px;">CRM</h2>
-        <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
-        <a href="{{ route('admin.whatsapp') }}" class="{{ request()->routeIs('admin.whatsapp*') ? 'active' : '' }}">WhatsApp integration </a>
-        <a href="{{ route('admin.customers.index') }}" class="{{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">Customers</a>
+<body class="m-0 bg-slate-50 font-sans text-gray-900 antialiased">
+<div class="flex min-h-screen">
+    <aside class="w-60 bg-gray-800 px-4 py-6 text-white">
+        <h2 class="mb-4 px-3 py-2  text-xl font-semibold">CRM</h2>
+        <nav class="flex flex-col gap-2">
+            @if(auth()->user()->canViewMenu('dashboard'))
+                <a href="{{ route('admin.dashboard') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ request()->routeIs('admin.dashboard') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">Dashboard</a>
+            @endif
+            @if(auth()->user()->canViewMenu('whatsapp'))
+                <a href="{{ route('admin.whatsapp') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ request()->routeIs('admin.whatsapp*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">WhatsApp integration</a>
+            @endif
+            @if(auth()->user()->canViewMenu('customers'))
+                <a href="{{ route('admin.customers.index') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ request()->routeIs('admin.customers.*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">Customers</a>
+            @endif
+            @if(auth()->user()->hasRole('admin', 'manager'))
+                <a href="{{ route('admin.users.index') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ request()->routeIs('admin.users.*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">Users</a>
+            @endif
+            @if(auth()->user()->hasRole('admin', 'manager'))
+                <a href="{{ route('admin.permissions.edit') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ request()->routeIs('admin.permissions.*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">Permissions</a>
+            @endif
+        </nav>
     </aside>
-    <main class="content">
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-        @if(session('error'))
-            <div class="alert alert-error">{{ session('error') }}</div>
-        @endif
+    <div class="flex flex-1 flex-col">
+        <header class="flex items-center justify-end gap-3 border-b border-gray-200 bg-white px-6 py-3">
+            <div class="flex items-center gap-2">
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
+                <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-600">{{ ucfirst(auth()->user()->role) }}</span>
+            </div>
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="w-auto rounded-lg bg-gray-800 px-3.5 py-1.5 text-sm text-white hover:bg-gray-900">Logout</button>
+            </form>
+        </header>
+        <main class="flex-1 p-6">
+            @if(session('success'))
+                <div class="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-emerald-700">{{ session('success') }}</div>
+            @endif
+            @if(session('error'))
+                <div class="mb-4 rounded-lg bg-red-50 px-4 py-3 text-red-700">{{ session('error') }}</div>
+            @endif
 
-        @yield('content')
-    </main>
+            @yield('content')
+        </main>
+    </div>
 </div>
 @yield('scripts')
 </body>

@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use Illuminate\Support\Facades\Route;
 
@@ -7,15 +10,50 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/admin', [ContactController::class, 'dashboard'])->name('admin.dashboard');
-Route::get('/admin/whatsapp', [ContactController::class, 'whatsapp'])->name('admin.whatsapp');
-Route::post('/admin/whatsapp', [ContactController::class, 'storeMessage'])->name('admin.whatsapp.store');
-Route::get('/admin/whatsapp/{message}/edit', [ContactController::class, 'editMessage'])->name('admin.whatsapp.edit');
-Route::put('/admin/whatsapp/{message}', [ContactController::class, 'updateMessage'])->name('admin.whatsapp.update');
-Route::delete('/admin/whatsapp/{message}', [ContactController::class, 'destroyMessage'])->name('admin.whatsapp.destroy');
-Route::get('/admin/customers', [ContactController::class, 'index'])->name('admin.customers.index');
-Route::post('/admin/customers', [ContactController::class, 'store'])->name('admin.customers.store');
-Route::post('/admin/customers/send-whatsapp', [ContactController::class, 'sendWhatsapp'])->name('admin.customers.send-whatsapp');
-Route::get('/admin/customers/{contact}/edit', [ContactController::class, 'edit'])->name('admin.customers.edit');
-Route::put('/admin/customers/{contact}', [ContactController::class, 'update'])->name('admin.customers.update');
-Route::delete('/admin/customers/{contact}', [ContactController::class, 'destroy'])->name('admin.customers.destroy');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+});
+
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+Route::middleware(['auth', 'active'])->group(function () {
+    Route::get('/dashboard', fn () => redirect()->route('admin.dashboard'))->name('dashboard');
+});
+
+Route::middleware(['auth', 'active', 'role:admin,manager,user'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [ContactController::class, 'dashboard'])->name('dashboard')->middleware('menu:dashboard');
+
+    Route::middleware('menu:whatsapp')->group(function () {
+        Route::get('/whatsapp', [ContactController::class, 'whatsapp'])->name('whatsapp');
+        Route::post('/whatsapp', [ContactController::class, 'storeMessage'])->name('whatsapp.store');
+        Route::get('/whatsapp/{message}/edit', [ContactController::class, 'editMessage'])->name('whatsapp.edit');
+        Route::put('/whatsapp/{message}', [ContactController::class, 'updateMessage'])->name('whatsapp.update');
+        Route::delete('/whatsapp/{message}', [ContactController::class, 'destroyMessage'])->name('whatsapp.destroy');
+    });
+
+    Route::middleware('menu:customers')->group(function () {
+        Route::get('/customers', [ContactController::class, 'index'])->name('customers.index');
+        Route::post('/customers', [ContactController::class, 'store'])->name('customers.store');
+        Route::post('/customers/send-whatsapp', [ContactController::class, 'sendWhatsapp'])->name('customers.send-whatsapp');
+        Route::get('/customers/{contact}/edit', [ContactController::class, 'edit'])->name('customers.edit');
+        Route::put('/customers/{contact}', [ContactController::class, 'update'])->name('customers.update');
+        Route::delete('/customers/{contact}', [ContactController::class, 'destroy'])->name('customers.destroy');
+    });
+});
+
+Route::middleware(['auth', 'active', 'role:admin,manager'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
+});
+
+Route::middleware(['auth', 'active', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::put('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update-role');
+});
+
+Route::middleware(['auth', 'active', 'role:admin,manager'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/permissions', [PermissionController::class, 'edit'])->name('permissions.edit');
+    Route::put('/permissions', [PermissionController::class, 'update'])->name('permissions.update');
+});
