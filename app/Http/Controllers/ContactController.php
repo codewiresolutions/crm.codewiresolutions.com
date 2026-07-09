@@ -76,7 +76,7 @@ class ContactController extends Controller
 
         $response = Http::withoutVerifying()
             ->timeout(20)
-            ->post('https://web-whatsappjs.infinicodesystem.site/send-message', [
+            ->post('https://webwhatsappjs.codewiresolutions.com/send-message', [
                 'number' => $data['number'],
                 'message' => $data['message'] ?? '',
             ]);

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CsvImportController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
@@ -41,6 +42,12 @@ Route::middleware(['auth', 'active', 'role:admin,manager,user'])->prefix('admin'
         Route::get('/customers/{contact}/edit', [ContactController::class, 'edit'])->name('customers.edit');
         Route::put('/customers/{contact}', [ContactController::class, 'update'])->name('customers.update');
         Route::delete('/customers/{contact}', [ContactController::class, 'destroy'])->name('customers.destroy');
+    });
+
+    Route::middleware('menu:csv')->group(function () {
+        Route::get('/csv', [CsvImportController::class, 'index'])->name('csv.index');
+        Route::post('/csv', [CsvImportController::class, 'store'])->name('csv.store');
+        Route::get('/csv/{csvImport}/download', [CsvImportController::class, 'download'])->name('csv.download');
     });
 });
 

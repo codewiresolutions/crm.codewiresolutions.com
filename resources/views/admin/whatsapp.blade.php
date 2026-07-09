@@ -6,7 +6,7 @@
     @php $showModal = isset($message) || $errors->any(); @endphp
 
     <div class="mb-4 rounded-xl bg-white p-5 shadow-sm">
-        <p><a href="https://web-whatsappjs.infinicodesystem.site/qr" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline">Open QR Code</a></p>
+        <p><a href="https://webwhatsappjs.codewiresolutions.com/qr" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline">Open QR Code</a></p>
         <h2 class="mt-2 text-xl font-semibold">WhatsApp</h2>
         <p class="text-sm text-gray-500">Scan Qr code connect with whatsapp</p>
     </div>
