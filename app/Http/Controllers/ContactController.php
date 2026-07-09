@@ -96,7 +96,7 @@ class ContactController extends Controller
 
     public function index()
     {
-        $contacts = Contact::latest()->get();
+        $contacts = Contact::latest()->paginate(15);
         $latestMessage = WhatsappMessage::latest()->first();
 
         return view('admin.customers', compact('contacts', 'latestMessage'));
@@ -123,7 +123,7 @@ class ContactController extends Controller
 
     public function edit(Contact $contact)
     {
-        $contacts = Contact::latest()->get();
+        $contacts = Contact::latest()->paginate(15);
 
         return view('admin.customers', compact('contacts', 'contact'));
     }

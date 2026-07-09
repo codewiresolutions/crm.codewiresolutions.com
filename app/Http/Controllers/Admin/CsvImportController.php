@@ -32,25 +32,28 @@ class CsvImportController extends Controller
         $nameIndex = array_search('name', $header, true);
         $numberIndex = array_search('contactnumber', $header, true);
 
-        $imported = 0;
+        $created = 0;
+        $updated = 0;
 
         if ($nameIndex !== false && $numberIndex !== false) {
             foreach ($rows as $row) {
-                $name = trim($row[$nameIndex] ?? '');
-                $number = trim($row[$numberIndex] ?? '');
+                $name = preg_replace('/\s+/', ' ', trim($row[$nameIndex] ?? ''));
+                $number = preg_replace('/\s+/', '', $row[$numberIndex] ?? '');
 
                 if ($name === '' || $number === '') {
                     continue;
                 }
 
-                Contact::create([
-                    'name' => $name,
-                    'phone_number' => $number,
-                ]);
+                $contact = Contact::updateOrCreate(
+                    ['phone_number' => $number],
+                    ['name' => $name]
+                );
 
-                $imported++;
+                $contact->wasRecentlyCreated ? $created++ : $updated++;
             }
         }
+
+        $imported = $created + $updated;
 
         CsvImport::create([
             'original_name' => $file->getClientOriginalName(),
@@ -63,7 +66,7 @@ class CsvImportController extends Controller
             return back()->with('error', 'CSV must contain "Name" and "Contact Number" columns. File saved but no contacts were imported.');
         }
 
-        return back()->with('success', "Imported {$imported} contact(s) from {$file->getClientOriginalName()}.");
+        return back()->with('success', "Added {$created} new and updated {$updated} existing contact(s) from {$file->getClientOriginalName()}.");
     }
 
     public function download(CsvImport $csvImport)
