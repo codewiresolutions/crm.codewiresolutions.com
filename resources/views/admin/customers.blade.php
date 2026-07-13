@@ -81,7 +81,13 @@
                 @foreach($contacts as $contactItem)
                     <tr data-user-type="{{ strtolower($contactItem->userType->name ?? '') }}">
                         <td class="border-b border-gray-200 p-2.5">
-                            <button type="button" class="border-none bg-transparent p-0 underline decoration-dashed" onclick="openMessageHistoryModal({{ $contactItem->id }})">{{ $contactItem->name }}</button>
+                            <button
+                                type="button"
+                                class="message-history-btn border-none bg-transparent p-0"
+                                onclick="openMessageHistoryModal({{ $contactItem->id }})"
+                            >
+                                {{ $contactItem->name }}
+                            </button>
                         </td>
                         <td class="border-b border-gray-200 p-2.5 ">{{ $contactItem->userType->name ?? '' }}</td>
                         <td class="border-b border-gray-200 p-2.5">{{ $contactItem->email ?? '------' }}</td>
@@ -263,4 +269,13 @@
             });
         }
     </script>
+    <style>
+
+        .message-history-btn {
+            text-decoration-line: underline;
+            text-decoration-style: dashed;
+        }
+
+
+    </style>
 @endsection
