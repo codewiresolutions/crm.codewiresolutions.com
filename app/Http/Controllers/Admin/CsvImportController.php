@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\CsvImport;
+use App\Models\UserType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -32,6 +33,15 @@ class CsvImportController extends Controller
         $nameIndex = array_search('name', $header, true);
         $numberIndex = array_search('contactnumber', $header, true);
 
+        $originalName = strtolower($file->getClientOriginalName());
+        $userTypeId = null;
+
+        if (str_contains($originalName, 'dealer')) {
+            $userTypeId = UserType::where('name', 'Dealer')->value('id');
+        } elseif (str_contains($originalName, 'individual')) {
+            $userTypeId = UserType::where('name', 'Individual')->value('id');
+        }
+
         $created = 0;
         $updated = 0;
 
@@ -44,9 +54,15 @@ class CsvImportController extends Controller
                     continue;
                 }
 
+                $values = ['name' => $name];
+
+                if ($userTypeId !== null) {
+                    $values['user_type_id'] = $userTypeId;
+                }
+
                 $contact = Contact::updateOrCreate(
                     ['phone_number' => $number],
-                    ['name' => $name]
+                    $values
                 );
 
                 $contact->wasRecentlyCreated ? $created++ : $updated++;
