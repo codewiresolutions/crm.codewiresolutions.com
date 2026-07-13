@@ -100,8 +100,9 @@ class ContactController extends Controller
         $contacts = Contact::with('userType')->latest()->paginate(15);
         $latestMessage = WhatsappMessage::latest()->first();
         $userTypes = UserType::all();
+        $messages = WhatsappMessage::latest()->get();
 
-        return view('admin.customers', compact('contacts', 'latestMessage', 'userTypes'));
+        return view('admin.customers', compact('contacts', 'latestMessage', 'userTypes', 'messages'));
     }
 
     public function store(Request $request)
@@ -127,8 +128,10 @@ class ContactController extends Controller
     {
         $contacts = Contact::with('userType')->latest()->paginate(15);
         $userTypes = UserType::all();
+        $latestMessage = WhatsappMessage::latest()->first();
+        $messages = WhatsappMessage::latest()->get();
 
-        return view('admin.customers', compact('contacts', 'contact', 'userTypes'));
+        return view('admin.customers', compact('contacts', 'contact', 'userTypes', 'latestMessage', 'messages'));
     }
 
     public function update(Request $request, Contact $contact)
