@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ContactGroupController;
+use App\Http\Controllers\ResendIntervalController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -39,11 +41,22 @@ Route::middleware(['auth', 'active', 'role:admin,manager,user'])->prefix('admin'
         Route::get('/customers', [ContactController::class, 'index'])->name('customers.index');
         Route::post('/customers', [ContactController::class, 'store'])->name('customers.store');
         Route::post('/customers/send-whatsapp', [ContactController::class, 'sendWhatsapp'])->name('customers.send-whatsapp');
+        Route::post('/customers/bulk-send-whatsapp', [ContactController::class, 'bulkSendWhatsapp'])->name('customers.bulk-send-whatsapp');
         Route::get('/customers/{contact}/edit', [ContactController::class, 'edit'])->name('customers.edit');
         Route::put('/customers/{contact}', [ContactController::class, 'update'])->name('customers.update');
         Route::delete('/customers/{contact}', [ContactController::class, 'destroy'])->name('customers.destroy');
         Route::patch('/customers/{contact}/selected-message', [ContactController::class, 'updateSelectedMessage'])->name('customers.update-selected-message');
+        Route::patch('/customers/{contact}/toggle-interested', [ContactController::class, 'toggleInterested'])->name('customers.toggle-interested');
         Route::get('/customers/{contact}/messages', [ContactController::class, 'messages'])->name('customers.messages');
+
+        Route::get('/groups', [ContactGroupController::class, 'index'])->name('groups.index');
+        Route::patch('/groups/{group}/selected-message', [ContactGroupController::class, 'updateSelectedMessage'])->name('groups.update-selected-message');
+        Route::post('/groups/{group}/send-whatsapp', [ContactGroupController::class, 'sendWhatsapp'])->name('groups.send-whatsapp');
+        Route::post('/groups/{group}/schedule-resend', [ContactGroupController::class, 'scheduleResend'])->name('groups.schedule-resend');
+        Route::delete('/groups/scheduled-resends/{resend}', [ContactGroupController::class, 'cancelScheduledResend'])->name('groups.cancel-scheduled-resend');
+
+        Route::post('/resend-intervals', [ResendIntervalController::class, 'store'])->name('resend-intervals.store');
+        Route::delete('/resend-intervals/{resendInterval}', [ResendIntervalController::class, 'destroy'])->name('resend-intervals.destroy');
     });
 
     Route::middleware('menu:csv')->group(function () {

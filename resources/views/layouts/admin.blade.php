@@ -21,6 +21,7 @@
             @endif
             @if(auth()->user()->canViewMenu('customers'))
                 <a href="{{ route('admin.customers.index') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ request()->routeIs('admin.customers.*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">Customers</a>
+                <a href="{{ route('admin.groups.index') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ request()->routeIs('admin.groups.*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">Customer Groups</a>
             @endif
             @if(auth()->user()->canViewMenu('csv'))
                 <a href="{{ route('admin.csv.index') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ request()->routeIs('admin.csv.*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">CSV Import</a>

@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contact;
+use App\Models\ContactGroup;
 use App\Models\MessageLog;
+use App\Models\ResendInterval;
 use App\Models\User;
 use App\Models\UserType;
 use App\Models\WhatsappMessage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class ContactController extends Controller
 {
@@ -77,31 +78,38 @@ class ContactController extends Controller
             'message_id' => ['nullable', 'exists:whatsapp_messages,id'],
         ]);
 
-        $response = Http::withoutVerifying()
-            ->timeout(20)
-            ->post('https://webwhatsappjs.codewiresolutions.com/send-message', [
-                'number' => $data['number'],
-                'message' => $data['message'] ?? '',
-            ]);
+        $contact = Contact::where('phone_number', $data['number'])->first();
 
-        if ($response->successful()) {
-            $contact = Contact::where('phone_number', $data['number'])->first();
-
-            if ($contact) {
-                $contact->update(['message_sent_at' => now()]);
-
-                MessageLog::create([
-                    'contact_id' => $contact->id,
-                    'whatsapp_message_id' => $data['message_id'] ?? null,
-                    'message' => $data['message'] ?? '',
-                    'sent_at' => now(),
-                ]);
-            }
-
+        if ($contact && $contact->sendWhatsappMessage($data['message'] ?? '', $data['message_id'] ?? null)) {
             return back()->with('success', 'WhatsApp message sent successfully.');
         }
 
         return back()->with('error', 'Unable to send WhatsApp message.');
+    }
+
+    public function bulkSendWhatsapp(Request $request)
+    {
+        $data = $request->validate([
+            'contact_ids' => ['required', 'array', 'min:2'],
+            'contact_ids.*' => ['exists:contacts,id'],
+            'message' => ['nullable', 'string', 'max:1000'],
+            'message_id' => ['nullable', 'exists:whatsapp_messages,id'],
+        ]);
+
+        $contacts = Contact::whereIn('id', $data['contact_ids'])->get();
+
+        foreach ($contacts as $contact) {
+            $contact->sendWhatsappMessage($data['message'] ?? '', $data['message_id'] ?? null);
+        }
+
+        $group = ContactGroup::create([
+            'name' => ContactGroup::generateRandomName(),
+            'selectedmessage' => $data['message_id'] ?? null,
+        ]);
+        $group->contacts()->attach($contacts->pluck('id'));
+
+        return redirect()->route('admin.customers.index')
+            ->with('success', 'Message sent to '.$contacts->count().' customers and group "'.$group->name.'" created.');
     }
 
     public function index()
@@ -110,8 +118,10 @@ class ContactController extends Controller
         $latestMessage = WhatsappMessage::latest()->first();
         $userTypes = UserType::all();
         $messages = WhatsappMessage::latest()->get();
+        $groups = ContactGroup::with(['contacts', 'pendingResend'])->latest()->get();
+        $resendIntervals = ResendInterval::orderBy('minutes')->get();
 
-        return view('admin.customers', compact('contacts', 'latestMessage', 'userTypes', 'messages'));
+        return view('admin.customers', compact('contacts', 'latestMessage', 'userTypes', 'messages', 'groups', 'resendIntervals'));
     }
 
     public function store(Request $request)
@@ -139,8 +149,10 @@ class ContactController extends Controller
         $userTypes = UserType::all();
         $latestMessage = WhatsappMessage::latest()->first();
         $messages = WhatsappMessage::latest()->get();
+        $groups = ContactGroup::with(['contacts', 'pendingResend'])->latest()->get();
+        $resendIntervals = ResendInterval::orderBy('minutes')->get();
 
-        return view('admin.customers', compact('contacts', 'contact', 'userTypes', 'latestMessage', 'messages'));
+        return view('admin.customers', compact('contacts', 'contact', 'userTypes', 'latestMessage', 'messages', 'groups', 'resendIntervals'));
     }
 
     public function update(Request $request, Contact $contact)
@@ -176,6 +188,13 @@ class ContactController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function toggleInterested(Contact $contact)
+    {
+        $contact->update(['is_interested' => ! $contact->is_interested]);
+
+        return response()->json(['is_interested' => $contact->is_interested]);
+    }
+
     public function messages(Contact $contact)
     {
         $logs = $contact->messageLogs()->latest('sent_at')->get();
@@ -187,6 +206,8 @@ class ContactController extends Controller
             'phone_number' => $contact->phone_number,
             'message_sent_at' => $contact->message_sent_at?->format('Y-m-d H:i'),
             'description' => $contact->description,
+            'created_at' => $contact->created_at?->format('Y-m-d H:i'),
+            'selectedmessage' => $contact->selectedmessage,
             'messages' => $logs->map(fn (MessageLog $log) => [
                 'message' => $log->message,
                 'sent_at' => $log->sent_at->format('Y-m-d H:i'),

@@ -2,6 +2,12 @@
 
 @section('title', 'Customer Management')
 
+@section('styles')
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+@endsection
+
 @section('content')
     @php $showModal = isset($contact) || $errors->any(); @endphp
 
@@ -40,39 +46,77 @@
         </div>
     </div>
 
-    <div id="messageHistoryModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/50" onclick="if(event.target === this) closeMessageHistoryModal()">
-        <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-x">
-            <div class="mb-3 flex items-center justify-between">
-                <h3 id="messageHistoryName" class="m-0 text-lg font-semibold"></h3>
-                <button type="button" class="w-auto border-none bg-transparent p-0 px-2 text-2xl leading-none text-gray-500 hover:text-gray-900" onclick="closeMessageHistoryModal()">&times;</button>
+    <div id="messageHistoryModal" class="fixed inset-0 z-50 hidden items-center justify-center mh-backdrop" onclick="if(event.target === this) closeMessageHistoryModal()">
+        <div class="mh-card" role="dialog" aria-modal="true" aria-labelledby="messageHistoryName">
+            <div class="mh-header">
+                <div class="mh-header-main">
+                    <div id="messageHistoryAvatar" class="mh-avatar"></div>
+                    <div class="mh-header-text">
+                        <div class="mh-name-row">
+                            <h3 id="messageHistoryName" class="mh-name"></h3>
+                            <span id="messageHistoryTypeBadge" class="mh-badge"></span>
+                        </div>
+                        <p id="messageHistorySubline" class="mh-subline"></p>
+                    </div>
+                </div>
+                <button type="button" class="mh-close-btn" onclick="closeMessageHistoryModal()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </div>
-            <table class="mb-4 w-full border-collapse text-sm">
-                <tbody>
-                    <tr>
-                        <td class="border-b border-gray-100 py-1 pr-2 font-semibold text-gray-700">Type</td>
-                        <td id="messageHistoryType" class="border-b border-gray-100 py-1 text-gray-600"></td>
-                    </tr>
-                    <tr>
-                        <td class="border-b border-gray-100 py-1 pr-2 font-semibold text-gray-700">Email</td>
-                        <td id="messageHistoryEmail" class="border-b border-gray-100 py-1 text-gray-600"></td>
-                    </tr>
-                    <tr>
-                        <td class="border-b border-gray-100 py-1 pr-2 font-semibold text-gray-700">Phone</td>
-                        <td id="messageHistoryPhone" class="border-b border-gray-100 py-1 text-gray-600"></td>
-                    </tr>
-                    <tr>
-                        <td class="border-b border-gray-100 py-1 pr-2 font-semibold text-gray-700">Sent At</td>
-                        <td id="messageHistorySentAt" class="border-b border-gray-100 py-1 text-gray-600"></td>
-                    </tr>
-                    <tr>
-                        <td class="py-1 pr-2 align-top font-semibold text-gray-700">Description</td>
-                        <td id="messageHistoryDescription" class="py-1 text-gray-600"></td>
-                    </tr>
-                </tbody>
-            </table>
-            <div>
-                <h4 class="mb-1 text-sm font-semibold text-gray-700">Messages Sent</h4>
-                <ul id="messageHistoryList" class="m-0 max-h-64 list-none space-y-2 overflow-y-auto p-0"></ul>
+
+            <div class="mh-body">
+                <div class="mh-details">
+                    <div class="mh-detail-cols">
+                        <div class="mh-detail-col">
+                            <span class="mh-label">Email</span>
+                            <div class="mh-value mh-value-row">
+                                <a id="messageHistoryEmail" href="#" class="mh-link"></a>
+                                <button type="button" class="mh-copy-btn" data-copy-target="email" onclick="copyMessageHistoryValue(this)">Copy</button>
+                            </div>
+                        </div>
+
+                        <div class="mh-detail-col">
+                            <span class="mh-label">Phone</span>
+                            <div class="mh-value mh-value-row">
+                                <span id="messageHistoryPhone" class="mh-tabular"></span>
+                                <button type="button" class="mh-copy-btn" data-copy-target="phone" onclick="copyMessageHistoryValue(this)">Copy</button>
+                            </div>
+                        </div>
+
+                        <div class="mh-detail-col">
+                            <span class="mh-label">Last sent</span>
+                            <div id="messageHistorySentAt" class="mh-value"></div>
+                        </div>
+                    </div>
+
+                    <div class="mh-detail-row mh-detail-row-top">
+                        <span class="mh-label">Description</span>
+                        <div id="messageHistoryDescription" class="mh-value"></div>
+                    </div>
+                </div>
+
+                <div class="mh-messages">
+                    <div class="mh-messages-header">
+                        <span class="mh-section-label">Messages</span>
+                        <span id="messageHistoryCount" class="mh-count-pill"></span>
+                    </div>
+                    <div class="mh-messages-list-wrap">
+                        <ul id="messageHistoryList" class="mh-messages-list"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mh-footer">
+                <select id="messageHistoryMessageSelect" required class="mh-message-select" onchange="updateMessageHistorySelectedMessage(this)">
+                    <option value="" disabled selected>Select message</option>
+                    @foreach($messages as $msg)
+                        <option value="{{ $msg->message }}" data-id="{{ $msg->id }}">{{ $msg->title }}</option>
+                    @endforeach
+                </select>
+                <button type="button" id="messageHistorySendBtn" class="mh-btn mh-btn-primary">Send WhatsApp</button>
             </div>
         </div>
     </div>
@@ -82,11 +126,38 @@
             <button type="button" class="tab-btn w-auto rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-white" data-type="all" onclick="setCustomerTab('all', this)">All</button>
             <button type="button" class="tab-btn w-auto rounded-md border border-gray-200 bg-gray-100 px-4 py-2 text-gray-700" data-type="individual" onclick="setCustomerTab('individual', this)">Individual</button>
             <button type="button" class="tab-btn w-auto rounded-md border border-gray-200 bg-gray-100 px-4 py-2 text-gray-700" data-type="dealer" onclick="setCustomerTab('dealer', this)">Dealer</button>
+            <button type="button" class="tab-btn w-auto rounded-md border border-gray-200 bg-gray-100 px-4 py-2 text-gray-700" data-type="groups" onclick="setCustomerTab('groups', this)">Groups</button>
         </div>
+
+        <div id="customerListSection">
         <input type="text" id="customerSearch" placeholder="Search customers..." onkeyup="filterCustomers()" class="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2.5">
+
+        <form id="bulkWhatsappForm" action="{{ route('admin.customers.bulk-send-whatsapp') }}" method="POST" class="mb-4 hidden flex-col gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3" onsubmit="return prepareBulkWhatsappSubmit(this)">
+            @csrf
+            <span id="bulkSelectedCount" class="text-sm font-medium text-emerald-800">0 selected</span>
+            <div id="bulkSelectedCustomers" class="flex flex-wrap gap-2"></div>
+            <div class="flex items-center gap-2">
+                <select id="bulkMessageSelect" name="message" required class="flex-1 rounded-lg border border-gray-300 px-2 py-1.5 text-sm">
+                    <option value="" disabled selected>Select message</option>
+                    @foreach($messages as $msg)
+                        <option value="{{ $msg->message }}" data-id="{{ $msg->id }}">{{ $msg->title }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" title="Send WhatsApp to selected" class="inline-flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-lg border-none bg-transparent p-0 text-green-600 hover:bg-emerald-100">
+                    <svg viewBox="0 0 24 24" fill="currentColor" class="h-4.5 w-4.5">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.472-.148-.67.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.372-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"></path>
+                        <path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .105 5.334.098 11.892c0 2.096.549 4.14 1.588 5.945L0 24l6.335-1.652a11.95 11.95 0 0 0 5.702 1.447h.005c6.585 0 11.943-5.335 11.95-11.893a11.82 11.82 0 0 0-3.472-8.453zM12.042 21.751h-.004a9.933 9.933 0 0 1-5.068-1.387l-.363-.215-3.759.982 1.003-3.649-.237-.375a9.9 9.9 0 0 1-1.527-5.276c.006-5.473 4.474-9.93 9.96-9.93a9.9 9.9 0 0 1 7.036 2.923 9.86 9.86 0 0 1 2.917 7.021c-.006 5.473-4.474 9.906-9.958 9.906z"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="bulkContactIdsContainer"></div>
+            <input type="hidden" name="message_id" id="bulkMessageIdInput">
+        </form>
+
         <table id="customersTable" class="w-full border-collapse">
             <thead>
                 <tr>
+                    <th class="border-b border-gray-200 p-2.5 text-left"><input type="checkbox" id="selectAllCustomers" onchange="toggleSelectAllCustomers(this)"></th>
                     <th class="border-b border-gray-200 p-2.5 text-left">Name</th>
                     <th class="border-b border-gray-200 p-2.5 text-left ">C-Type</th>
                     <th class="border-b border-gray-200 p-2.5 text-left">Email</th>
@@ -99,11 +170,14 @@
             </thead>
             <tbody>
                 @foreach($contacts as $contactItem)
-                    <tr data-user-type="{{ strtolower($contactItem->userType->name ?? '') }}">
+                    <tr data-user-type="{{ strtolower($contactItem->userType->name ?? '') }}" data-contact-id="{{ $contactItem->id }}" class="{{ $contactItem->is_interested ? 'row-interested' : '' }}">
+                        <td class="border-b border-gray-200 p-2.5">
+                            <input type="checkbox" class="customer-select-checkbox" value="{{ $contactItem->id }}" onchange="updateBulkWhatsappBar()">
+                        </td>
                         <td class="border-b border-gray-200 p-2.5">
                             <button
                                 type="button"
-                                class="message-history-btn border-none bg-transparent p-0"
+                                class="message-history-btn border-none bg-transparent p-0 pb-1"
                                 onclick="openMessageHistoryModal({{ $contactItem->id }})"
                             >
                                 {{ $contactItem->name }}
@@ -111,7 +185,7 @@
                         </td>
                         <td class="border-b border-gray-200 p-2.5 ">{{ $contactItem->userType->name ?? '' }}</td>
                         <td class="border-b border-gray-200 p-2.5">{{ $contactItem->email ?? '------' }}</td>
-                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->phone_number }}</td>
+                        <td class="border-b border-gray-200 p-2.5" title="Double-click to mark as interested" ondblclick="toggleInterested({{ $contactItem->id }}, this)">{{ $contactItem->phone_number }}</td>
 {{--                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->description }}</td>--}}
 
                         <td class="border-b border-gray-200 p-2.5">{{ $contactItem->message_sent_at ? $contactItem->message_sent_at : 'Not sent yet' }}</td>
@@ -161,6 +235,11 @@
         <div class="mt-4">
             {{ $contacts->links() }}
         </div>
+        </div>
+
+        <div id="groupsSection" class="hidden">
+            @include('admin.partials.groups-table')
+        </div>
     </div>
 
     <script>
@@ -185,6 +264,203 @@
             });
         }
 
+        function toggleInterested(contactId, cellEl) {
+            var row = cellEl.closest('tr');
+            var wasInterested = row.classList.contains('row-interested');
+            row.classList.toggle('row-interested');
+
+            fetch('{{ url('admin/customers') }}/' + contactId + '/toggle-interested', {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            })
+                .then(function (res) {
+                    if (!res.ok) throw new Error('Request failed with status ' + res.status);
+                    return res.json();
+                })
+                .then(function (data) {
+                    row.classList.toggle('row-interested', data.is_interested);
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    row.classList.toggle('row-interested', wasInterested);
+                });
+        }
+
+        function updateBulkWhatsappBar() {
+            var allCheckboxes = document.querySelectorAll('.customer-select-checkbox');
+            var checkboxes = document.querySelectorAll('.customer-select-checkbox:checked');
+            var bar = document.getElementById('bulkWhatsappForm');
+            document.getElementById('bulkSelectedCount').textContent = checkboxes.length + ' selected';
+
+            var selectAll = document.getElementById('selectAllCustomers');
+            if (selectAll) {
+                selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+                selectAll.indeterminate = checkboxes.length > 0 && checkboxes.length < allCheckboxes.length;
+            }
+
+            var chipContainer = document.getElementById('bulkSelectedCustomers');
+            chipContainer.innerHTML = '';
+            checkboxes.forEach(function (cb) {
+                var row = cb.closest('tr');
+                var nameBtn = row ? row.querySelector('.message-history-btn') : null;
+                var name = nameBtn ? nameBtn.textContent.trim() : cb.value;
+                var contactId = cb.value;
+
+                var chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-white px-2 py-1 text-xs text-emerald-800';
+
+                var label = document.createElement('span');
+                label.textContent = name;
+                chip.appendChild(label);
+
+                var removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.title = 'Remove ' + name;
+                removeBtn.className = 'font-bold leading-none text-emerald-600 hover:text-emerald-900';
+                removeBtn.textContent = '×';
+                removeBtn.onclick = function () { removeCustomerFromBulk(contactId); };
+                chip.appendChild(removeBtn);
+
+                chipContainer.appendChild(chip);
+            });
+
+            if (checkboxes.length >= 2) {
+                bar.classList.remove('hidden');
+                bar.classList.add('flex');
+            } else if (checkboxes.length === 0) {
+                bar.classList.add('hidden');
+                bar.classList.remove('flex');
+            }
+        }
+
+        function toggleSelectAllCustomers(checkbox) {
+            document.querySelectorAll('.customer-select-checkbox').forEach(function (cb) {
+                cb.checked = checkbox.checked;
+            });
+            updateBulkWhatsappBar();
+        }
+
+        function removeCustomerFromBulk(contactId) {
+            var checkbox = document.querySelector('.customer-select-checkbox[value="' + contactId + '"]');
+            if (checkbox) checkbox.checked = false;
+            updateBulkWhatsappBar();
+        }
+
+        function prepareBulkWhatsappSubmit() {
+            var checkboxes = document.querySelectorAll('.customer-select-checkbox:checked');
+            if (checkboxes.length < 2) return false;
+
+            var messageSelect = document.getElementById('bulkMessageSelect');
+            var option = messageSelect.options[messageSelect.selectedIndex];
+            if (!option || !option.dataset.id) return false;
+
+            document.getElementById('bulkMessageIdInput').value = option.dataset.id;
+
+            var container = document.getElementById('bulkContactIdsContainer');
+            container.innerHTML = '';
+            checkboxes.forEach(function (cb) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'contact_ids[]';
+                input.value = cb.value;
+                container.appendChild(input);
+            });
+
+            return true;
+        }
+
+        var messageHistoryMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var messageHistoryCurrentEmail = '';
+        var messageHistoryCurrentPhone = '';
+        var messageHistoryCurrentContactId = null;
+
+        function updateMessageHistorySelectedMessage(selectEl) {
+            var option = selectEl.options[selectEl.selectedIndex];
+            var messageId = option ? option.dataset.id : null;
+            if (!messageId || !messageHistoryCurrentContactId) return;
+
+            var row = document.querySelector('tr[data-contact-id="' + messageHistoryCurrentContactId + '"]');
+            if (row) {
+                var rowSelect = row.querySelector('form[action*="send-whatsapp"] select[name="message"]');
+                var rowHiddenInput = row.querySelector('.js-message-id');
+                if (rowSelect) {
+                    var rowOption = rowSelect.querySelector('option[data-id="' + messageId + '"]');
+                    if (rowOption) rowSelect.value = rowOption.value;
+                }
+                if (rowHiddenInput) rowHiddenInput.value = messageId;
+            }
+
+            fetch('{{ url('admin/customers') }}/' + messageHistoryCurrentContactId + '/selected-message', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ message_id: messageId })
+            });
+        }
+
+        function parseMessageHistoryDate(value) {
+            if (!value) return null;
+            var d = new Date(value.replace(' ', 'T'));
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function formatMessageHistoryDateTime(value) {
+            var d = parseMessageHistoryDate(value);
+            if (!d) return null;
+            var hours = d.getHours();
+            var ampm = hours >= 12 ? 'PM' : 'AM';
+            var hours12 = hours % 12 || 12;
+            var minutes = ('0' + d.getMinutes()).slice(-2);
+            return messageHistoryMonths[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear() + ' · ' + hours12 + ':' + minutes + ' ' + ampm;
+        }
+
+        function formatMessageHistoryDateOnly(value) {
+            var d = parseMessageHistoryDate(value);
+            if (!d) return null;
+            return messageHistoryMonths[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+        }
+
+        function formatMessageHistoryShortDateTime(value) {
+            var d = parseMessageHistoryDate(value);
+            if (!d) return value;
+            var hours = ('0' + d.getHours()).slice(-2);
+            var minutes = ('0' + d.getMinutes()).slice(-2);
+            return messageHistoryMonths[d.getMonth()] + ' ' + d.getDate() + ' · ' + hours + ':' + minutes;
+        }
+
+        function formatMessageHistoryPhone(raw) {
+            if (!raw) return '';
+            var digits = raw.replace(/\D/g, '');
+            if (digits.indexOf('92') === 0) digits = digits.slice(2);
+            else if (digits.indexOf('0') === 0) digits = digits.slice(1);
+            if (digits.length !== 10) return raw;
+            return '+92 ' + digits.slice(0, 3) + ' ' + digits.slice(3);
+        }
+
+        function getMessageHistoryInitials(name) {
+            if (!name) return '';
+            var parts = name.trim().split(/\s+/).slice(0, 2);
+            return parts.map(function (p) { return p.charAt(0).toUpperCase(); }).join('');
+        }
+
+        function copyMessageHistoryValue(btn) {
+            var target = btn.dataset.copyTarget;
+            var value = target === 'email' ? messageHistoryCurrentEmail : messageHistoryCurrentPhone;
+            if (!value) return;
+
+            navigator.clipboard.writeText(value).then(function () {
+                var original = btn.textContent;
+                btn.textContent = '✓';
+                setTimeout(function () { btn.textContent = original; }, 1500);
+            });
+        }
+
         function openMessageHistoryModal(contactId) {
             fetch('{{ url('admin/customers') }}/' + contactId + '/messages', {
                 headers: { 'Accept': 'application/json' }
@@ -194,36 +470,58 @@
                     return res.json();
                 })
                 .then(function (data) {
+                    messageHistoryCurrentContactId = contactId;
+                    messageHistoryCurrentEmail = data.email || '';
+                    messageHistoryCurrentPhone = data.phone_number || '';
+
+                    document.getElementById('messageHistoryAvatar').textContent = getMessageHistoryInitials(data.name);
                     document.getElementById('messageHistoryName').textContent = data.name;
-                    document.getElementById('messageHistoryType').textContent = data.type || '------';
-                    document.getElementById('messageHistoryEmail').textContent = data.email || '------';
-                    document.getElementById('messageHistoryPhone').textContent = data.phone_number || '------';
-                    document.getElementById('messageHistorySentAt').textContent = data.message_sent_at || 'Not sent yet';
+                    document.getElementById('messageHistoryTypeBadge').textContent = data.type || '';
+                    document.getElementById('messageHistoryTypeBadge').style.display = data.type ? '' : 'none';
+
+                    var since = formatMessageHistoryDateOnly(data.created_at);
+                    var count = data.messages.length;
+                    document.getElementById('messageHistorySubline').textContent =
+                        (since ? 'Customer since ' + since : 'New customer') + ' · ' + count + (count === 1 ? ' message sent' : ' messages sent');
+
+                    var emailLink = document.getElementById('messageHistoryEmail');
+                    emailLink.textContent = data.email || '------';
+                    emailLink.href = data.email ? 'mailto:' + data.email : '#';
+
+                    document.getElementById('messageHistoryPhone').textContent = formatMessageHistoryPhone(data.phone_number) || '------';
+                    document.getElementById('messageHistorySentAt').textContent = formatMessageHistoryDateTime(data.message_sent_at) || 'Not sent yet';
                     document.getElementById('messageHistoryDescription').textContent = data.description || 'No description';
+                    document.getElementById('messageHistoryCount').textContent = String(count);
+
+                    var messageSelect = document.getElementById('messageHistoryMessageSelect');
+                    var selectedOption = data.selectedmessage
+                        ? messageSelect.querySelector('option[data-id="' + data.selectedmessage + '"]')
+                        : null;
+                    messageSelect.value = selectedOption ? selectedOption.value : '';
 
                     var list = document.getElementById('messageHistoryList');
                     list.innerHTML = '';
 
                     if (!data.messages.length) {
                         var empty = document.createElement('li');
-                        empty.className = 'text-sm text-gray-500';
+                        empty.className = 'mh-messages-empty';
                         empty.textContent = 'No messages sent yet.';
                         list.appendChild(empty);
                     } else {
                         data.messages.forEach(function (log) {
                             var li = document.createElement('li');
-                            li.className = 'rounded-lg border border-gray-200 p-2.5 text-sm';
+                            li.className = 'mh-message-row';
 
-                            var msgDiv = document.createElement('div');
-                            msgDiv.className = 'text-gray-800';
-                            msgDiv.textContent = log.message;
+                            var msgSpan = document.createElement('span');
+                            msgSpan.className = 'mh-message-text';
+                            msgSpan.textContent = log.message;
 
-                            var timeDiv = document.createElement('div');
-                            timeDiv.className = 'mt-1 text-xs text-gray-400';
-                            timeDiv.textContent = log.sent_at;
+                            var timeSpan = document.createElement('span');
+                            timeSpan.className = 'mh-message-time';
+                            timeSpan.textContent = formatMessageHistoryShortDateTime(log.sent_at);
 
-                            li.appendChild(msgDiv);
-                            li.appendChild(timeDiv);
+                            li.appendChild(msgSpan);
+                            li.appendChild(timeSpan);
                             list.appendChild(li);
                         });
                     }
@@ -240,6 +538,14 @@
             document.getElementById('messageHistoryModal').classList.remove('flex');
             document.getElementById('messageHistoryModal').classList.add('hidden');
         }
+
+        document.getElementById('messageHistorySendBtn').addEventListener('click', function () {
+            if (!messageHistoryCurrentContactId) return;
+            var row = document.querySelector('tr[data-contact-id="' + messageHistoryCurrentContactId + '"]');
+            var form = row && row.querySelector('form[action*="send-whatsapp"]');
+            if (!form) return;
+            if (form.requestSubmit) form.requestSubmit(); else form.submit();
+        });
 
         function openCustomerModal() {
             document.getElementById('customerModal').classList.remove('hidden');
@@ -268,8 +574,34 @@
             });
             btn.classList.remove.apply(btn.classList, tabInactiveClasses);
             btn.classList.add.apply(btn.classList, tabActiveClasses);
-            filterCustomers();
+
+            var listSection = document.getElementById('customerListSection');
+            var groupsSection = document.getElementById('groupsSection');
+
+            if (type === 'groups') {
+                listSection.classList.add('hidden');
+                groupsSection.classList.remove('hidden');
+            } else {
+                groupsSection.classList.add('hidden');
+                listSection.classList.remove('hidden');
+                filterCustomers();
+            }
+
+            var url = new URL(window.location.href);
+            if (type === 'all') {
+                url.searchParams.delete('tab');
+            } else {
+                url.searchParams.set('tab', type);
+            }
+            history.replaceState(null, '', url);
         }
+
+        (function () {
+            var tab = new URLSearchParams(window.location.search).get('tab');
+            if (!['all', 'individual', 'dealer', 'groups'].includes(tab)) return;
+            var btn = document.querySelector('.tab-btn[data-type="' + tab + '"]');
+            if (btn) setCustomerTab(tab, btn);
+        })();
 
         function confirmDelete(event) {
             event.preventDefault();
@@ -302,11 +634,370 @@
     </script>
     <style>
 
-        .message-history-btn {
-            text-decoration-line: underline;
-            text-decoration-style: dashed;
+        tr.row-interested td {
+            background-color: #dcfce7;
         }
 
+        tr.row-interested td:first-child {
+            box-shadow: inset 4px 0 0 0 #80af61;
+        }
+
+        .message-history-btn {
+            color: #6b7484;
+            text-decoration-line: underline;
+            text-decoration-style: dashed;
+            text-decoration-color: #c3c9d4;
+            text-underline-offset: 3px;
+        }
+
+        /* Message history modal */
+        .mh-backdrop {
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .mh-card {
+            width: 760px;
+            max-width: calc(100vw - 48px);
+            max-height: calc(100vh - 64px);
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 24px 64px rgba(15, 23, 42, 0.35);
+            font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+        }
+
+        .mh-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 28px 32px;
+            background: linear-gradient(135deg, #f5f8ff 0%, #ffffff 65%);
+            border-bottom: 1px solid #eef1f5;
+        }
+
+        .mh-header-main {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            min-width: 0;
+        }
+
+        .mh-avatar {
+            flex-shrink: 0;
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: #e8eefc;
+            color: #2557d6;
+            font-weight: 700;
+            font-size: 19px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 6px 14px rgba(37, 87, 214, 0.14);
+        }
+
+        .mh-header-text {
+            min-width: 0;
+        }
+
+        .mh-name-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .mh-name {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2233;
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mh-badge {
+            flex-shrink: 0;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #e8eefc;
+            color: #2557d6;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .mh-subline {
+            margin: 6px 0 0;
+            font-size: 13.5px;
+            color: #6b7484;
+        }
+
+        .mh-close-btn {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #6b7484;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background-color 0.15s ease;
+        }
+
+        .mh-close-btn:hover {
+            background: #f2f4f8;
+        }
+
+        .mh-body {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 24px 32px;
+            overflow-y: auto;
+        }
+
+        .mh-details {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .mh-detail-cols {
+            display: flex;
+            gap: 20px;
+        }
+
+        .mh-detail-col {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .mh-detail-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mh-detail-row-top {
+            align-items: flex-start;
+        }
+
+        .mh-label {
+            flex: 0 0 110px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8a92a3;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .mh-detail-col .mh-label {
+            flex: 0 0 auto;
+        }
+
+        .mh-value {
+            flex: 1;
+            font-size: 14px;
+            color: #1a2233;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mh-detail-row-top .mh-value {
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .mh-value-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mh-link {
+            color: #1a2233;
+            text-decoration: none;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mh-link:hover {
+            text-decoration: underline;
+        }
+
+        .mh-tabular {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .mh-copy-btn {
+            flex-shrink: 0;
+            border: 1px solid #d9dee7;
+            background: #ffffff;
+            color: #4b5565;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .mh-copy-btn:hover {
+            background: #f2f4f8;
+        }
+
+        .mh-messages {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .mh-messages-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .mh-section-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #8a92a3;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .mh-count-pill {
+            padding: 2px 9px;
+            border-radius: 999px;
+            background: #eef1f5;
+            color: #4b5565;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .mh-messages-list-wrap {
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 2px;
+        }
+
+        .mh-messages-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .mh-message-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #eef1f5;
+            border-radius: 10px;
+            background: #fafbfc;
+        }
+
+        .mh-message-text {
+            font-size: 13.5px;
+            color: #1a2233;
+            min-width: 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .mh-message-time {
+            flex-shrink: 0;
+            font-size: 12px;
+            color: #a5adbd;
+        }
+
+        .mh-messages-empty {
+            grid-column: 1 / -1;
+            padding: 12px;
+            font-size: 13px;
+            color: #a5adbd;
+        }
+
+        .mh-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 20px 32px;
+            background: #fafbfc;
+            border-top: 1px solid #eef1f5;
+        }
+
+        .mh-message-select {
+            flex: 1;
+            min-width: 0;
+            height: 40px;
+            padding: 0 12px;
+            border: 1px solid #d9dee7;
+            border-radius: 9px;
+            background: #ffffff;
+            color: #1a2233;
+            font-size: 13.5px;
+        }
+
+        .mh-btn {
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 18px;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+        }
+
+        .mh-btn-primary {
+            border: none;
+            background: #1faa53;
+            color: #ffffff;
+            box-shadow: 0 8px 18px rgba(31, 170, 83, 0.28);
+        }
+
+        .mh-btn-primary:hover {
+            background: #188a44;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(31, 170, 83, 0.32);
+        }
+
+        .mh-btn-primary:active {
+            transform: translateY(0);
+        }
 
     </style>
 @endsection
