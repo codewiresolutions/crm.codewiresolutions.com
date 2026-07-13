@@ -81,9 +81,9 @@
                                 @csrf
                                 <input type="hidden" name="number" value="{{ $contactItem->phone_number }}">
                                 <select name="message" required class="rounded-lg border border-gray-300 px-1.5 py-1.5 text-xs" onclick="event.stopPropagation()">
-                                    <option value="" disabled {{ !$latestMessage ? 'selected' : '' }}>Select message</option>
+                                    <option value="" disabled selected>Select message</option>
                                     @foreach($messages as $msg)
-                                        <option value="{{ $msg->message }}" {{ $latestMessage && $latestMessage->id === $msg->id ? 'selected' : '' }}>{{ $msg->title }}</option>
+                                        <option value="{{ $msg->message }}">{{ $msg->title }}</option>
                                     @endforeach
                                 </select>
                                 <button type="submit" title="Send WhatsApp" class="inline-flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-lg border-none bg-transparent p-0 text-green-600 hover:bg-emerald-50">
