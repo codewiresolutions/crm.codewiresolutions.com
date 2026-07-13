@@ -40,6 +40,23 @@
         </div>
     </div>
 
+    <div id="messageHistoryModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/50" onclick="if(event.target === this) closeMessageHistoryModal()">
+        <div class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+            <div class="mb-3 flex items-center justify-between">
+                <h3 id="messageHistoryName" class="m-0 text-lg font-semibold"></h3>
+                <button type="button" class="w-auto border-none bg-transparent p-0 px-2 text-2xl leading-none text-gray-500 hover:text-gray-900" onclick="closeMessageHistoryModal()">&times;</button>
+            </div>
+            <div class="mb-4">
+                <h4 class="mb-1 text-sm font-semibold text-gray-700">Description</h4>
+                <p id="messageHistoryDescription" class="text-sm text-gray-600"></p>
+            </div>
+            <div>
+                <h4 class="mb-1 text-sm font-semibold text-gray-700">Messages Sent</h4>
+                <ul id="messageHistoryList" class="m-0 max-h-64 list-none space-y-2 overflow-y-auto p-0"></ul>
+            </div>
+        </div>
+    </div>
+
     <div class="rounded-xl bg-white p-5 shadow-sm">
         <div class="mb-4 flex gap-2">
             <button type="button" class="tab-btn w-auto rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-white" data-type="all" onclick="setCustomerTab('all', this)">All</button>
@@ -51,23 +68,25 @@
             <thead>
                 <tr>
                     <th class="border-b border-gray-200 p-2.5 text-left">Name</th>
-                    <th class="border-b border-gray-200 p-2.5 text-left">Type</th>
+                    <th class="border-b border-gray-200 p-2.5 text-left ">C-Type</th>
                     <th class="border-b border-gray-200 p-2.5 text-left">Email</th>
                     <th class="border-b border-gray-200 p-2.5 text-left">Phone</th>
-                    <th class="border-b border-gray-200 p-2.5 text-left">Description</th>
+{{--                    <th class="border-b border-gray-200 p-2.5 text-left">Description</th>--}}
 
-                    <th class="border-b border-gray-200 p-2.5 text-left">Message At</th>
+                    <th class="border-b border-gray-200 p-2.5 text-left">Sent At</th>
                     <th class="border-b border-gray-200 p-2.5 text-left">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($contacts as $contactItem)
                     <tr data-user-type="{{ strtolower($contactItem->userType->name ?? '') }}">
-                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->name }}</td>
-                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->userType->name ?? '' }}</td>
-                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->email }}</td>
+                        <td class="border-b border-gray-200 p-2.5">
+                            <button type="button" class="border-none bg-transparent p-0 underline decoration-dashed" onclick="openMessageHistoryModal({{ $contactItem->id }})">{{ $contactItem->name }}</button>
+                        </td>
+                        <td class="border-b border-gray-200 p-2.5 ">{{ $contactItem->userType->name ?? '' }}</td>
+                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->email ?? '------' }}</td>
                         <td class="border-b border-gray-200 p-2.5">{{ $contactItem->phone_number }}</td>
-                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->description }}</td>
+{{--                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->description }}</td>--}}
 
                         <td class="border-b border-gray-200 p-2.5">{{ $contactItem->message_sent_at ? $contactItem->message_sent_at : 'Not sent yet' }}</td>
                         <td class="flex items-center gap-0.5 whitespace-nowrap border-b border-gray-200 p-2.5">
@@ -80,6 +99,7 @@
                             <form action="{{ route('admin.customers.send-whatsapp') }}" method="POST" class="inline-flex items-center gap-1">
                                 @csrf
                                 <input type="hidden" name="number" value="{{ $contactItem->phone_number }}">
+                                <input type="hidden" name="message_id" class="js-message-id" value="{{ $contactItem->selectedmessage }}">
                                 <select name="message" required class="rounded-lg border border-gray-300 px-1.5 py-1.5 text-xs" onclick="event.stopPropagation()" data-update-url="{{ route('admin.customers.update-selected-message', $contactItem) }}" onchange="updateSelectedMessage(this)">
                                     <option value="" disabled {{ !$contactItem->selectedmessage ? 'selected' : '' }}>Select message</option>
                                     @foreach($messages as $msg)
@@ -125,6 +145,9 @@
             var messageId = option ? option.dataset.id : null;
             if (!messageId) return;
 
+            var hiddenInput = selectEl.closest('form').querySelector('.js-message-id');
+            if (hiddenInput) hiddenInput.value = messageId;
+
             fetch(selectEl.dataset.updateUrl, {
                 method: 'PATCH',
                 headers: {
@@ -136,6 +159,51 @@
             });
         }
 
+        function openMessageHistoryModal(contactId) {
+            fetch('{{ url('admin/customers') }}/' + contactId + '/messages', {
+                headers: { 'Accept': 'application/json' }
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    document.getElementById('messageHistoryName').textContent = data.name;
+                    document.getElementById('messageHistoryDescription').textContent = data.description || 'No description';
+
+                    var list = document.getElementById('messageHistoryList');
+                    list.innerHTML = '';
+
+                    if (!data.messages.length) {
+                        var empty = document.createElement('li');
+                        empty.className = 'text-sm text-gray-500';
+                        empty.textContent = 'No messages sent yet.';
+                        list.appendChild(empty);
+                    } else {
+                        data.messages.forEach(function (log) {
+                            var li = document.createElement('li');
+                            li.className = 'rounded-lg border border-gray-200 p-2.5 text-sm';
+
+                            var msgDiv = document.createElement('div');
+                            msgDiv.className = 'text-gray-800';
+                            msgDiv.textContent = log.message;
+
+                            var timeDiv = document.createElement('div');
+                            timeDiv.className = 'mt-1 text-xs text-gray-400';
+                            timeDiv.textContent = log.sent_at;
+
+                            li.appendChild(msgDiv);
+                            li.appendChild(timeDiv);
+                            list.appendChild(li);
+                        });
+                    }
+
+                    document.getElementById('messageHistoryModal').classList.remove('hidden');
+                    document.getElementById('messageHistoryModal').classList.add('flex');
+                });
+        }
+        function closeMessageHistoryModal() {
+            document.getElementById('messageHistoryModal').classList.remove('flex');
+            document.getElementById('messageHistoryModal').classList.add('hidden');
+        }
+
         function openCustomerModal() {
             document.getElementById('customerModal').classList.remove('hidden');
             document.getElementById('customerModal').classList.add('flex');
@@ -145,7 +213,10 @@
             document.getElementById('customerModal').classList.add('hidden');
         }
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') closeCustomerModal();
+            if (e.key === 'Escape') {
+                closeCustomerModal();
+                closeMessageHistoryModal();
+            }
         });
 
         var activeCustomerTab = 'all';

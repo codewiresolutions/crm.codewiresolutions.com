@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contact;
+use App\Models\MessageLog;
 use App\Models\User;
 use App\Models\UserType;
 use App\Models\WhatsappMessage;
@@ -73,6 +74,7 @@ class ContactController extends Controller
         $data = $request->validate([
             'number' => ['required', 'string'],
             'message' => ['nullable', 'string', 'max:1000'],
+            'message_id' => ['nullable', 'exists:whatsapp_messages,id'],
         ]);
 
         $response = Http::withoutVerifying()
@@ -87,6 +89,13 @@ class ContactController extends Controller
 
             if ($contact) {
                 $contact->update(['message_sent_at' => now()]);
+
+                MessageLog::create([
+                    'contact_id' => $contact->id,
+                    'whatsapp_message_id' => $data['message_id'] ?? null,
+                    'message' => $data['message'] ?? '',
+                    'sent_at' => now(),
+                ]);
             }
 
             return back()->with('success', 'WhatsApp message sent successfully.');
@@ -165,5 +174,19 @@ class ContactController extends Controller
         $contact->update(['selectedmessage' => $data['message_id']]);
 
         return response()->json(['success' => true]);
+    }
+
+    public function messages(Contact $contact)
+    {
+        $logs = $contact->messageLogs()->latest('sent_at')->get();
+
+        return response()->json([
+            'name' => $contact->name,
+            'description' => $contact->description,
+            'messages' => $logs->map(fn (MessageLog $log) => [
+                'message' => $log->message,
+                'sent_at' => $log->sent_at->format('Y-m-d H:i'),
+            ]),
+        ]);
     }
 }
