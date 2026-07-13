@@ -28,10 +28,11 @@
                 <input type="email" name="email" placeholder="Email" value="{{ old('email', $contact->email ?? '') }}" required class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5">
                 <input type="text" name="phone_number" placeholder="Phone Number" value="{{ old('phone_number', $contact->phone_number ?? '') }}" required class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5">
 
-                <select name="user_type" required class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5">
-                    <option value="" disabled {{ old('user_type', $contact->user_type ?? '') === '' ? 'selected' : '' }}>Select User Type</option>
-                    <option value="individual" {{ old('user_type', $contact->user_type ?? '') === 'individual' ? 'selected' : '' }}>Individual</option>
-                    <option value="dealer" {{ old('user_type', $contact->user_type ?? '') === 'dealer' ? 'selected' : '' }}>Dealer</option>
+                <select name="user_type_id" required class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5">
+                    <option value="" disabled {{ old('user_type_id', $contact->user_type_id ?? '') === '' ? 'selected' : '' }}>Select User Type</option>
+                    @foreach($userTypes as $type)
+                        <option value="{{ $type->id }}" {{ (string) old('user_type_id', $contact->user_type_id ?? '') === (string) $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                    @endforeach
                 </select>
                 <textarea name="description" rows="4" placeholder="Description" required class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5">{{ old('description', $contact->description ?? '') }}</textarea>
                 <button type="submit" class="mt-2 w-full rounded-lg bg-blue-600 px-3 py-2.5 text-white hover:bg-blue-700">{{ isset($contact) ? 'Update Customer' : 'Create Customer' }}</button>
@@ -61,9 +62,9 @@
             </thead>
             <tbody>
                 @foreach($contacts as $contactItem)
-                    <tr data-user-type="{{ $contactItem->user_type }}">
+                    <tr data-user-type="{{ strtolower($contactItem->userType->name ?? '') }}">
                         <td class="border-b border-gray-200 p-2.5">{{ $contactItem->name }}</td>
-                        <td class="border-b border-gray-200 p-2.5">{{ ucfirst($contactItem->user_type) }}</td>
+                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->userType->name ?? '' }}</td>
                         <td class="border-b border-gray-200 p-2.5">{{ $contactItem->email }}</td>
                         <td class="border-b border-gray-200 p-2.5">{{ $contactItem->phone_number }}</td>
                         <td class="border-b border-gray-200 p-2.5">{{ $contactItem->description }}</td>

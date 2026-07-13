@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Contact;
 use App\Models\User;
+use App\Models\UserType;
 use App\Models\WhatsappMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -96,10 +97,11 @@ class ContactController extends Controller
 
     public function index()
     {
-        $contacts = Contact::latest()->paginate(15);
+        $contacts = Contact::with('userType')->latest()->paginate(15);
         $latestMessage = WhatsappMessage::latest()->first();
+        $userTypes = UserType::all();
 
-        return view('admin.customers', compact('contacts', 'latestMessage'));
+        return view('admin.customers', compact('contacts', 'latestMessage', 'userTypes'));
     }
 
     public function store(Request $request)
@@ -109,7 +111,7 @@ class ContactController extends Controller
             'email' => ['required', 'email'],
             'phone_number' => ['required', 'string'],
             'description' => ['required', 'string'],
-            'user_type' => ['required', 'in:individual,dealer'],
+            'user_type_id' => ['required', 'exists:user_types,id'],
         ]);
 
         $contact = Contact::create($validated);
@@ -123,9 +125,10 @@ class ContactController extends Controller
 
     public function edit(Contact $contact)
     {
-        $contacts = Contact::latest()->paginate(15);
+        $contacts = Contact::with('userType')->latest()->paginate(15);
+        $userTypes = UserType::all();
 
-        return view('admin.customers', compact('contacts', 'contact'));
+        return view('admin.customers', compact('contacts', 'contact', 'userTypes'));
     }
 
     public function update(Request $request, Contact $contact)
@@ -135,7 +138,7 @@ class ContactController extends Controller
             'email' => ['required', 'email'],
             'phone_number' => ['required', 'string'],
             'description' => ['required', 'string'],
-            'user_type' => ['required', 'in:individual,dealer'],
+            'user_type_id' => ['required', 'exists:user_types,id'],
         ]);
 
         $contact->update($validated);
