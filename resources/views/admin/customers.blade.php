@@ -80,10 +80,10 @@
                             <form action="{{ route('admin.customers.send-whatsapp') }}" method="POST" class="inline-flex items-center gap-1">
                                 @csrf
                                 <input type="hidden" name="number" value="{{ $contactItem->phone_number }}">
-                                <select name="message" required class="rounded-lg border border-gray-300 px-1.5 py-1.5 text-xs" onclick="event.stopPropagation()">
-                                    <option value="" disabled selected>Select message</option>
+                                <select name="message" required class="rounded-lg border border-gray-300 px-1.5 py-1.5 text-xs" onclick="event.stopPropagation()" data-update-url="{{ route('admin.customers.update-selected-message', $contactItem) }}" onchange="updateSelectedMessage(this)">
+                                    <option value="" disabled {{ !$contactItem->selectedmessage ? 'selected' : '' }}>Select message</option>
                                     @foreach($messages as $msg)
-                                        <option value="{{ $msg->message }}">{{ $msg->title }}</option>
+                                        <option value="{{ $msg->message }}" data-id="{{ $msg->id }}" {{ (int) $contactItem->selectedmessage === $msg->id ? 'selected' : '' }}>{{ $msg->title }}</option>
                                     @endforeach
                                 </select>
                                 <button type="submit" title="Send WhatsApp" class="inline-flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-lg border-none bg-transparent p-0 text-green-600 hover:bg-emerald-50">
@@ -118,6 +118,24 @@
     </div>
 
     <script>
+        var csrfToken = '{{ csrf_token() }}';
+
+        function updateSelectedMessage(selectEl) {
+            var option = selectEl.options[selectEl.selectedIndex];
+            var messageId = option ? option.dataset.id : null;
+            if (!messageId) return;
+
+            fetch(selectEl.dataset.updateUrl, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ message_id: messageId })
+            });
+        }
+
         function openCustomerModal() {
             document.getElementById('customerModal').classList.remove('hidden');
             document.getElementById('customerModal').classList.add('flex');

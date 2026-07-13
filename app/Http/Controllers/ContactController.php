@@ -155,4 +155,15 @@ class ContactController extends Controller
 
         return redirect()->route('admin.customers.index')->with('success', 'Customer deleted successfully.');
     }
+
+    public function updateSelectedMessage(Request $request, Contact $contact)
+    {
+        $data = $request->validate([
+            'message_id' => ['required', 'exists:whatsapp_messages,id'],
+        ]);
+
+        $contact->update(['selectedmessage' => $data['message_id']]);
+
+        return response()->json(['success' => true]);
+    }
 }

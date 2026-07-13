@@ -17,10 +17,16 @@ class Contact extends Model
         'description',
         'user_type_id',
         'message_sent_at',
+        'selectedmessage',
     ];
 
     public function userType(): BelongsTo
     {
         return $this->belongsTo(UserType::class);
+    }
+
+    public function selectedMessage(): BelongsTo
+    {
+        return $this->belongsTo(WhatsappMessage::class, 'selectedmessage');
     }
 }

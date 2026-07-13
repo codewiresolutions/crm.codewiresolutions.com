@@ -42,6 +42,7 @@ Route::middleware(['auth', 'active', 'role:admin,manager,user'])->prefix('admin'
         Route::get('/customers/{contact}/edit', [ContactController::class, 'edit'])->name('customers.edit');
         Route::put('/customers/{contact}', [ContactController::class, 'update'])->name('customers.update');
         Route::delete('/customers/{contact}', [ContactController::class, 'destroy'])->name('customers.destroy');
+        Route::patch('/customers/{contact}/selected-message', [ContactController::class, 'updateSelectedMessage'])->name('customers.update-selected-message');
     });
 
     Route::middleware('menu:csv')->group(function () {
