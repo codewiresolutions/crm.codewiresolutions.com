@@ -49,7 +49,7 @@
         <input type="text" id="customerSearch" placeholder="Search customers..." onkeyup="filterCustomers()" class="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2.5">
         <table id="customersTable" class="w-full border-collapse">
             <thead>
-                <tr>
+                <tr>test
                     <th class="border-b border-gray-200 p-2.5 text-left">Name</th>
                     <th class="border-b border-gray-200 p-2.5 text-left">Type</th>
                     <th class="border-b border-gray-200 p-2.5 text-left">Email</th>
