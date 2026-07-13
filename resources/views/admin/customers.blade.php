@@ -41,15 +41,35 @@
     </div>
 
     <div id="messageHistoryModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/50" onclick="if(event.target === this) closeMessageHistoryModal()">
-        <div class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+        <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-x">
             <div class="mb-3 flex items-center justify-between">
                 <h3 id="messageHistoryName" class="m-0 text-lg font-semibold"></h3>
                 <button type="button" class="w-auto border-none bg-transparent p-0 px-2 text-2xl leading-none text-gray-500 hover:text-gray-900" onclick="closeMessageHistoryModal()">&times;</button>
             </div>
-            <div class="mb-4">
-                <h4 class="mb-1 text-sm font-semibold text-gray-700">Description</h4>
-                <p id="messageHistoryDescription" class="text-sm text-gray-600"></p>
-            </div>
+            <table class="mb-4 w-full border-collapse text-sm">
+                <tbody>
+                    <tr>
+                        <td class="border-b border-gray-100 py-1 pr-2 font-semibold text-gray-700">Type</td>
+                        <td id="messageHistoryType" class="border-b border-gray-100 py-1 text-gray-600"></td>
+                    </tr>
+                    <tr>
+                        <td class="border-b border-gray-100 py-1 pr-2 font-semibold text-gray-700">Email</td>
+                        <td id="messageHistoryEmail" class="border-b border-gray-100 py-1 text-gray-600"></td>
+                    </tr>
+                    <tr>
+                        <td class="border-b border-gray-100 py-1 pr-2 font-semibold text-gray-700">Phone</td>
+                        <td id="messageHistoryPhone" class="border-b border-gray-100 py-1 text-gray-600"></td>
+                    </tr>
+                    <tr>
+                        <td class="border-b border-gray-100 py-1 pr-2 font-semibold text-gray-700">Sent At</td>
+                        <td id="messageHistorySentAt" class="border-b border-gray-100 py-1 text-gray-600"></td>
+                    </tr>
+                    <tr>
+                        <td class="py-1 pr-2 align-top font-semibold text-gray-700">Description</td>
+                        <td id="messageHistoryDescription" class="py-1 text-gray-600"></td>
+                    </tr>
+                </tbody>
+            </table>
             <div>
                 <h4 class="mb-1 text-sm font-semibold text-gray-700">Messages Sent</h4>
                 <ul id="messageHistoryList" class="m-0 max-h-64 list-none space-y-2 overflow-y-auto p-0"></ul>
@@ -169,9 +189,16 @@
             fetch('{{ url('admin/customers') }}/' + contactId + '/messages', {
                 headers: { 'Accept': 'application/json' }
             })
-                .then(function (res) { return res.json(); })
+                .then(function (res) {
+                    if (!res.ok) throw new Error('Request failed with status ' + res.status);
+                    return res.json();
+                })
                 .then(function (data) {
                     document.getElementById('messageHistoryName').textContent = data.name;
+                    document.getElementById('messageHistoryType').textContent = data.type || '------';
+                    document.getElementById('messageHistoryEmail').textContent = data.email || '------';
+                    document.getElementById('messageHistoryPhone').textContent = data.phone_number || '------';
+                    document.getElementById('messageHistorySentAt').textContent = data.message_sent_at || 'Not sent yet';
                     document.getElementById('messageHistoryDescription').textContent = data.description || 'No description';
 
                     var list = document.getElementById('messageHistoryList');
@@ -203,6 +230,10 @@
 
                     document.getElementById('messageHistoryModal').classList.remove('hidden');
                     document.getElementById('messageHistoryModal').classList.add('flex');
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    alert('Unable to load customer details. Please try again.');
                 });
         }
         function closeMessageHistoryModal() {

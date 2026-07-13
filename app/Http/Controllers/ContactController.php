@@ -182,6 +182,10 @@ class ContactController extends Controller
 
         return response()->json([
             'name' => $contact->name,
+            'type' => $contact->userType->name ?? '',
+            'email' => $contact->email,
+            'phone_number' => $contact->phone_number,
+            'message_sent_at' => $contact->message_sent_at?->format('Y-m-d H:i'),
             'description' => $contact->description,
             'messages' => $logs->map(fn (MessageLog $log) => [
                 'message' => $log->message,

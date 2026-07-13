@@ -21,6 +21,10 @@ class Contact extends Model
         'selectedmessage',
     ];
 
+    protected $casts = [
+        'message_sent_at' => 'datetime',
+    ];
+
     public function userType(): BelongsTo
     {
         return $this->belongsTo(UserType::class);
