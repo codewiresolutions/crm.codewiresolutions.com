@@ -25,7 +25,7 @@ class CsvImportController extends Controller
         ]);
 
         $file = $request->file('csv_file');
-        $storedPath = $file->store('csv-imports', 'local');
+        $storedPath = $file->store('csv-imports', 'public');
 
         $rows = array_map('str_getcsv', file($file->getRealPath()));
         $header = array_map(fn ($column) => preg_replace('/[^a-z0-9]/', '', strtolower(trim($column))), array_shift($rows) ?? []);
@@ -87,6 +87,6 @@ class CsvImportController extends Controller
 
     public function download(CsvImport $csvImport)
     {
-        return Storage::disk('local')->download($csvImport->path, $csvImport->original_name);
+        return Storage::disk('public')->download($csvImport->path, $csvImport->original_name);
     }
 }
