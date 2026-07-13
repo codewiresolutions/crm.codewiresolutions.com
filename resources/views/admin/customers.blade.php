@@ -51,7 +51,7 @@
             <thead>
                 <tr>
                     <th class="border-b border-gray-200 p-2.5 text-left">Name</th>
-                    <th class="border-b border-gray-200 p-2.5 text-left">User Type</th>
+                    <th class="border-b border-gray-200 p-2.5 text-left">Type</th>
                     <th class="border-b border-gray-200 p-2.5 text-left">Email</th>
                     <th class="border-b border-gray-200 p-2.5 text-left">Phone</th>
                     <th class="border-b border-gray-200 p-2.5 text-left">Description</th>
