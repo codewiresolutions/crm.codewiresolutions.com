@@ -136,8 +136,8 @@
         <div id="customerListSection">
         <div class="mb-4 flex gap-2">
             <input type="text" id="customerSearch" placeholder="Search customers..." onkeyup="filterCustomers()" class="flex-1 rounded-lg border border-gray-300 px-3 py-2.5">
-            <a href="{{ route('admin.customers.export') }}" class="w-auto rounded-lg bg-blue-600 px-4.5 py-2.5 text-white no-underline hover:bg-blue-700">Export CSV</a>
-            <a href="{{ route('admin.customers.export-messages') }}" class="w-auto rounded-lg bg-blue-600 px-4.5 py-2.5 text-white no-underline hover:bg-blue-700">Export Messages</a>
+            <a href="{{ route('admin.customers.export') }}" class="w-auto bg-cyan-600 px-4.5 py-2.5 text-white no-underline hover:bg-cyan-700">Export CSV</a>
+            <a href="{{ route('admin.customers.export-messages') }}" class="w-auto bg-cyan-600 px-4.5 py-2.5 text-white no-underline hover:bg-cyan-700">Export Messages</a>
 
         </div>
 
