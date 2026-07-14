@@ -124,6 +124,73 @@ class ContactController extends Controller
         return view('admin.customers', compact('contacts', 'latestMessage', 'userTypes', 'messages', 'groups', 'resendIntervals'));
     }
 
+    public function export()
+    {
+        $contacts = Contact::with('userType')->latest()->get();
+
+        $filename = 'customers-'.now()->format('Y-m-d-His').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ];
+
+        $columns = ['Name', 'Type', 'Email', 'Phone', 'Description', 'Sent At'];
+
+        $callback = function () use ($contacts, $columns) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, $columns);
+
+            foreach ($contacts as $contact) {
+                fputcsv($handle, [
+                    $contact->name,
+                    $contact->userType->name ?? '',
+                    $contact->email,
+                    $contact->phone_number,
+                    strip_tags($contact->description ?? ''),
+                    $contact->message_sent_at?->format('Y-m-d H:i') ?? '',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportMessages()
+    {
+        $logs = MessageLog::with('contact')->latest('sent_at')->get();
+
+        $filename = 'messages-'.now()->format('Y-m-d-His').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ];
+
+        $columns = ['Customer', 'Phone', 'Email', 'Message', 'Sent At'];
+
+        $callback = function () use ($logs, $columns) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, $columns);
+
+            foreach ($logs as $log) {
+                fputcsv($handle, [
+                    $log->contact->name ?? '',
+                    $log->contact->phone_number ?? '',
+                    $log->contact->email ?? '',
+                    $log->message,
+                    $log->sent_at?->format('Y-m-d H:i') ?? '',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

@@ -6,6 +6,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
 @endsection
 
 @section('content')
@@ -16,7 +17,9 @@
             <h2 class="m-0 text-xl font-semibold">Customers</h2>
             <p class="text-sm text-gray-500">Create, update, and delete customer records.</p>
         </div>
-        <button type="button" class="w-auto rounded-lg bg-blue-600 px-4.5 py-2.5 text-white hover:bg-blue-700" onclick="openCustomerModal()">+ Add Customer</button>
+        <div class="flex gap-2">
+            <button type="button" class="w-auto rounded-lg bg-blue-600 px-4.5 py-2.5 text-white hover:bg-blue-700" onclick="openCustomerModal()">+ Add Customer</button>
+        </div>
     </div>
 
     <div id="customerModal" class="fixed inset-0 z-50 items-center justify-center bg-gray-900/50 {{ $showModal ? 'flex' : 'hidden' }}" onclick="if(event.target === this) closeCustomerModal()">
@@ -40,7 +43,8 @@
                         <option value="{{ $type->id }}" {{ (string) old('user_type_id', $contact->user_type_id ?? '') === (string) $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
                     @endforeach
                 </select>
-                <textarea name="description" rows="4" placeholder="Description" required class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5">{{ old('description', $contact->description ?? '') }}</textarea>
+                <div id="descriptionEditor" class="mt-2 rounded-lg bg-white" style="height:150px;"></div>
+                <textarea name="description" id="descriptionInput" class="hidden">{{ old('description', $contact->description ?? '') }}</textarea>
                 <button type="submit" class="mt-2 w-full rounded-lg bg-blue-600 px-3 py-2.5 text-white hover:bg-blue-700">{{ isset($contact) ? 'Update Customer' : 'Create Customer' }}</button>
             </form>
         </div>
@@ -130,7 +134,12 @@
         </div>
 
         <div id="customerListSection">
-        <input type="text" id="customerSearch" placeholder="Search customers..." onkeyup="filterCustomers()" class="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2.5">
+        <div class="mb-4 flex gap-2">
+            <input type="text" id="customerSearch" placeholder="Search customers..." onkeyup="filterCustomers()" class="flex-1 rounded-lg border border-gray-300 px-3 py-2.5">
+            <a href="{{ route('admin.customers.export') }}" class="w-auto rounded-lg bg-blue-600 px-4.5 py-2.5 text-white no-underline hover:bg-blue-700">Export CSV</a>
+            <a href="{{ route('admin.customers.export-messages') }}" class="w-auto rounded-lg bg-blue-600 px-4.5 py-2.5 text-white no-underline hover:bg-blue-700">Export Messages</a>
+
+        </div>
 
         <form id="bulkWhatsappForm" action="{{ route('admin.customers.bulk-send-whatsapp') }}" method="POST" class="mb-4 hidden flex-col gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3" onsubmit="return prepareBulkWhatsappSubmit(this)">
             @csrf
@@ -242,6 +251,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
     <script>
         var csrfToken = '{{ csrf_token() }}';
 
@@ -490,7 +500,7 @@
 
                     document.getElementById('messageHistoryPhone').textContent = formatMessageHistoryPhone(data.phone_number) || '------';
                     document.getElementById('messageHistorySentAt').textContent = formatMessageHistoryDateTime(data.message_sent_at) || 'Not sent yet';
-                    document.getElementById('messageHistoryDescription').textContent = data.description || 'No description';
+                    document.getElementById('messageHistoryDescription').innerHTML = data.description || 'No description';
                     document.getElementById('messageHistoryCount').textContent = String(count);
 
                     var messageSelect = document.getElementById('messageHistoryMessageSelect');
@@ -547,14 +557,32 @@
             if (form.requestSubmit) form.requestSubmit(); else form.submit();
         });
 
+        var descriptionQuill = null;
+        function initDescriptionEditor() {
+            if (descriptionQuill) return;
+            descriptionQuill = new Quill('#descriptionEditor', {
+                theme: 'snow',
+                placeholder: 'Description',
+            });
+            var hidden = document.getElementById('descriptionInput');
+            descriptionQuill.root.innerHTML = hidden.value;
+            descriptionQuill.on('text-change', function () {
+                hidden.value = descriptionQuill.root.innerHTML;
+            });
+        }
+
         function openCustomerModal() {
             document.getElementById('customerModal').classList.remove('hidden');
             document.getElementById('customerModal').classList.add('flex');
+            initDescriptionEditor();
         }
         function closeCustomerModal() {
             document.getElementById('customerModal').classList.remove('flex');
             document.getElementById('customerModal').classList.add('hidden');
         }
+        @if($showModal)
+            initDescriptionEditor();
+        @endif
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeCustomerModal();
