@@ -40,7 +40,7 @@ Route::middleware(['auth', 'active', 'role:admin,manager,user'])->prefix('admin'
     Route::middleware('menu:customers')->group(function () {
         Route::get('/customers', [ContactController::class, 'index'])->name('customers.index');
         Route::get('/customers/export', [ContactController::class, 'export'])->name('customers.export');
-        Route::get('/customers/export-messages', [ContactController::class, 'exportMessages'])->name('customers.export-messages');
+        Route::get('/customers/export-with-messages', [ContactController::class, 'exportWithMessages'])->name('customers.export-with-messages');
         Route::post('/customers', [ContactController::class, 'store'])->name('customers.store');
         Route::post('/customers/send-whatsapp', [ContactController::class, 'sendWhatsapp'])->name('customers.send-whatsapp');
         Route::post('/customers/bulk-send-whatsapp', [ContactController::class, 'bulkSendWhatsapp'])->name('customers.bulk-send-whatsapp');

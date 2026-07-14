@@ -158,31 +158,44 @@ class ContactController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function exportMessages()
+    public function exportWithMessages()
     {
-        $logs = MessageLog::with('contact')->latest('sent_at')->get();
+        $contacts = Contact::with(['userType', 'messageLogs'])->latest()->get();
 
-        $filename = 'messages-'.now()->format('Y-m-d-His').'.csv';
+        $filename = 'customers-with-messages-'.now()->format('Y-m-d-His').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
-        $columns = ['Customer', 'Phone', 'Email', 'Message', 'Sent At'];
+        $columns = ['Name', 'Type', 'Email', 'Phone', 'Description', 'Message', 'Message Sent At'];
 
-        $callback = function () use ($logs, $columns) {
+        $callback = function () use ($contacts, $columns) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, $columns);
 
-            foreach ($logs as $log) {
-                fputcsv($handle, [
-                    $log->contact->name ?? '',
-                    $log->contact->phone_number ?? '',
-                    $log->contact->email ?? '',
-                    $log->message,
-                    $log->sent_at?->format('Y-m-d H:i') ?? '',
-                ]);
+            foreach ($contacts as $contact) {
+                $base = [
+                    $contact->name,
+                    $contact->userType->name ?? '',
+                    $contact->email,
+                    $contact->phone_number,
+                    strip_tags($contact->description ?? ''),
+                ];
+
+                if ($contact->messageLogs->isEmpty()) {
+                    fputcsv($handle, array_merge($base, ['', '']));
+
+                    continue;
+                }
+
+                foreach ($contact->messageLogs as $log) {
+                    fputcsv($handle, array_merge($base, [
+                        $log->message,
+                        $log->sent_at?->format('Y-m-d H:i') ?? '',
+                    ]));
+                }
             }
 
             fclose($handle);
