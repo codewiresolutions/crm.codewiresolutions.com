@@ -143,6 +143,14 @@
                 </button>
             </div>
             <div id="wcBody" class="wc-body"></div>
+            <div class="wc-footer">
+                <input type="text" id="wcMessageInput" class="wc-input" placeholder="Type a message" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); sendWhatsappChatMessage(); }">
+                <button type="button" id="wcSendBtn" class="wc-send-btn" title="Send" onclick="sendWhatsappChatMessage()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <path d="M2.01 21l20.99-9-20.99-9-.01 7 15 2-15 2z"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -581,7 +589,87 @@
             document.getElementById('messageHistoryModal').classList.add('hidden');
         }
 
+        var wcCurrentContactId = null;
+
+        function appendWhatsappChatBubble(data) {
+            var body = document.getElementById('wcBody');
+            var empty = body.querySelector('.wc-empty');
+            if (empty) empty.remove();
+
+            var d = new Date();
+            var dateLabel = formatMessageHistoryDateOnly(d.toISOString());
+            var lastSep = body.querySelector('.wc-date-sep:last-of-type span');
+            if (!lastSep || lastSep.textContent !== dateLabel) {
+                var sep = document.createElement('div');
+                sep.className = 'wc-date-sep';
+                var sepLabel = document.createElement('span');
+                sepLabel.textContent = dateLabel;
+                sep.appendChild(sepLabel);
+                body.appendChild(sep);
+            }
+
+            var row = document.createElement('div');
+            row.className = 'wc-row wc-row-sent';
+
+            var bubble = document.createElement('div');
+            bubble.className = 'wc-bubble wc-bubble-sent';
+
+            var text = document.createElement('div');
+            text.className = 'wc-bubble-text';
+            text.textContent = data.message;
+            bubble.appendChild(text);
+
+            var time = document.createElement('div');
+            time.className = 'wc-bubble-time';
+            time.textContent = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+            bubble.appendChild(time);
+
+            row.appendChild(bubble);
+            body.appendChild(row);
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function sendWhatsappChatMessage() {
+            var input = document.getElementById('wcMessageInput');
+            var message = input.value.trim();
+            if (!message || !wcCurrentContactId) return;
+
+            var row = document.querySelector('tr[data-contact-id="' + wcCurrentContactId + '"]');
+            var phoneInput = row ? row.querySelector('input[name="number"]') : null;
+            var number = phoneInput ? phoneInput.value : null;
+            if (!number) return;
+
+            var sendBtn = document.getElementById('wcSendBtn');
+            sendBtn.disabled = true;
+
+            fetch('{{ route('admin.customers.send-whatsapp') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ number: number, message: message })
+            })
+                .then(function (res) {
+                    if (!res.ok) throw new Error('Request failed with status ' + res.status);
+                    input.value = '';
+                    appendWhatsappChatBubble({ message: message });
+                    var sentAtCell = row ? row.children[5] : null;
+                    if (sentAtCell) sentAtCell.textContent = 'Just now';
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    alert('Unable to send WhatsApp message. Please try again.');
+                })
+                .finally(function () {
+                    sendBtn.disabled = false;
+                });
+        }
+
         function openWhatsappChatModal(contactId) {
+            wcCurrentContactId = contactId;
+            document.getElementById('wcMessageInput').value = '';
             fetch('{{ url('admin/customers') }}/' + contactId + '/whatsapp-chat', {
                 headers: { 'Accept': 'application/json' }
             })
@@ -653,6 +741,7 @@
         function closeWhatsappChatModal() {
             document.getElementById('whatsappChatModal').classList.remove('flex');
             document.getElementById('whatsappChatModal').classList.add('hidden');
+            wcCurrentContactId = null;
         }
 
         document.getElementById('messageHistorySendBtn').addEventListener('click', function () {
@@ -1216,6 +1305,57 @@
 
         .wc-close-btn:hover {
             background: rgba(255, 255, 255, 0.15);
+        }
+
+        .wc-footer {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: #f0f2f5;
+            border-top: 1px solid #e4e6ea;
+        }
+
+        .wc-input {
+            flex: 1;
+            min-width: 0;
+            height: 40px;
+            padding: 0 14px;
+            border: none;
+            border-radius: 20px;
+            background: #ffffff;
+            color: #111b21;
+            font-size: 13.5px;
+        }
+
+        .wc-input:focus {
+            outline: 2px solid #128c7e33;
+        }
+
+        .wc-send-btn {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 50%;
+            background: #128c7e;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background-color 0.15s ease;
+        }
+
+        .wc-send-btn:hover {
+            background: #075e54;
+        }
+
+        .wc-send-btn:disabled {
+            opacity: 0.6;
+            cursor: default;
         }
 
         .wc-body {
