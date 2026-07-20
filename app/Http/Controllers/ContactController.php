@@ -9,6 +9,7 @@ use App\Models\ResendInterval;
 use App\Models\User;
 use App\Models\UserType;
 use App\Models\WhatsappMessage;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -307,23 +308,31 @@ class ContactController extends Controller
 
         $targetNumber = $this->normalizePhoneNumber($contact->phone_number);
         $received = collect();
+        $liveUnavailable = false;
 
-        $response = Http::withoutVerifying()
-            ->timeout(20)
-            ->get('https://webwhatsappjs.codewiresolutions.com/messages');
+        try {
+            $response = Http::withoutVerifying()
+                ->connectTimeout(5)
+                ->timeout(10)
+                ->get('https://webwhatsappjs.codewiresolutions.com/messages');
 
-        if ($response->successful()) {
-            $received = collect($response->json('messages') ?? [])
-                ->filter(fn ($item) => empty($item['isGroup'])
-                    && $this->normalizePhoneNumber($item['from'] ?? '') === $targetNumber
-                    && $targetNumber !== '')
-                ->map(fn ($item) => [
-                    'direction' => 'received',
-                    'type' => $item['type'] ?? 'text',
-                    'message' => $item['message'] ?? '',
-                    'timestamp' => $item['timestamp'] ?? null,
-                ])
-                ->values();
+            if ($response->successful()) {
+                $received = collect($response->json('messages') ?? [])
+                    ->filter(fn ($item) => empty($item['isGroup'])
+                        && $this->normalizePhoneNumber($item['from'] ?? '') === $targetNumber
+                        && $targetNumber !== '')
+                    ->map(fn ($item) => [
+                        'direction' => 'received',
+                        'type' => $item['type'] ?? 'text',
+                        'message' => $item['message'] ?? '',
+                        'timestamp' => $item['timestamp'] ?? null,
+                    ])
+                    ->values();
+            } else {
+                $liveUnavailable = true;
+            }
+        } catch (ConnectionException $e) {
+            $liveUnavailable = true;
         }
 
         $thread = $sent->concat($received)
@@ -334,6 +343,7 @@ class ContactController extends Controller
             'name' => $contact->name,
             'phone_number' => $contact->phone_number,
             'messages' => $thread,
+            'live_unavailable' => $liveUnavailable,
         ]);
     }
 
