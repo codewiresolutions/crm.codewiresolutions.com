@@ -16,6 +16,8 @@ class WhatsappInboxController extends Controller
 
         return view('admin.whatsapp-inbox', [
             'messages' => $messages,
+            'count' => $response->successful() ? $response->json('count') : null,
+            'totalStored' => $response->successful() ? $response->json('totalStored') : null,
             'fetchFailed' => ! $response->successful(),
         ]);
     }
