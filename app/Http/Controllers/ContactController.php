@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserType;
 use App\Models\WhatsappMessage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class ContactController extends Controller
 {
@@ -293,5 +294,57 @@ class ContactController extends Controller
                 'sent_at' => $log->sent_at->format('Y-m-d H:i'),
             ]),
         ]);
+    }
+
+    public function whatsappChat(Contact $contact)
+    {
+        $sent = $contact->messageLogs()->get()->map(fn (MessageLog $log) => [
+            'direction' => 'sent',
+            'type' => 'text',
+            'message' => $log->message,
+            'timestamp' => optional($log->sent_at)->toIso8601String(),
+        ]);
+
+        $targetNumber = $this->normalizePhoneNumber($contact->phone_number);
+        $received = collect();
+
+        $response = Http::withoutVerifying()
+            ->timeout(20)
+            ->get('https://webwhatsappjs.codewiresolutions.com/messages');
+
+        if ($response->successful()) {
+            $received = collect($response->json('messages') ?? [])
+                ->filter(fn ($item) => empty($item['isGroup'])
+                    && $this->normalizePhoneNumber($item['from'] ?? '') === $targetNumber
+                    && $targetNumber !== '')
+                ->map(fn ($item) => [
+                    'direction' => 'received',
+                    'type' => $item['type'] ?? 'text',
+                    'message' => $item['message'] ?? '',
+                    'timestamp' => $item['timestamp'] ?? null,
+                ])
+                ->values();
+        }
+
+        $thread = $sent->concat($received)
+            ->sortBy(fn ($item) => $item['timestamp'] ? \Illuminate\Support\Carbon::parse($item['timestamp'])->timestamp : 0)
+            ->values();
+
+        return response()->json([
+            'name' => $contact->name,
+            'phone_number' => $contact->phone_number,
+            'messages' => $thread,
+        ]);
+    }
+
+    private function normalizePhoneNumber(?string $number): string
+    {
+        $digits = preg_replace('/\D/', '', $number ?? '');
+
+        if (str_starts_with($digits, '0')) {
+            $digits = '92'.substr($digits, 1);
+        }
+
+        return substr($digits, -10);
     }
 }

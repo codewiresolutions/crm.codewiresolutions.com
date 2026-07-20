@@ -125,6 +125,27 @@
         </div>
     </div>
 
+    <div id="whatsappChatModal" class="fixed inset-0 z-50 hidden items-center justify-center wc-backdrop" onclick="if(event.target === this) closeWhatsappChatModal()">
+        <div class="wc-card" role="dialog" aria-modal="true" aria-labelledby="wcName">
+            <div class="wc-header">
+                <div class="wc-header-main">
+                    <div id="wcAvatar" class="wc-avatar"></div>
+                    <div class="min-w-0">
+                        <h3 id="wcName" class="wc-name"></h3>
+                        <p id="wcPhone" class="wc-phone"></p>
+                    </div>
+                </div>
+                <button type="button" class="wc-close-btn" onclick="closeWhatsappChatModal()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div id="wcBody" class="wc-body"></div>
+        </div>
+    </div>
+
     <div class="rounded-xl bg-white p-5 shadow-sm">
         <div class="mb-4 flex gap-2">
             <button type="button" class="tab-btn w-auto rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-white" data-type="all" onclick="setCustomerTab('all', this)">All</button>
@@ -199,6 +220,17 @@
 
                         <td class="border-b border-gray-200 p-2.5">{{ $contactItem->message_sent_at ? $contactItem->message_sent_at : 'Not sent yet' }}</td>
                         <td class="flex items-center gap-0.5 whitespace-nowrap border-b border-gray-200 p-2.5">
+                            <button
+                                type="button"
+                                title="WhatsApp Chat"
+                                class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg border-none bg-transparent p-0 text-emerald-600 hover:bg-emerald-50"
+                                onclick="openWhatsappChatModal({{ $contactItem->id }})"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4.5 w-4.5">
+                                    <rect x="7" y="2" width="10" height="20" rx="2" ry="2"></rect>
+                                    <line x1="11" y1="18" x2="13" y2="18"></line>
+                                </svg>
+                            </button>
                             <a href="{{ route('admin.customers.edit', $contactItem) }}" title="Edit" class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg text-blue-600 no-underline hover:bg-blue-50">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4.5 w-4.5">
                                     <path d="M12 20h9"></path>
@@ -549,6 +581,80 @@
             document.getElementById('messageHistoryModal').classList.add('hidden');
         }
 
+        function openWhatsappChatModal(contactId) {
+            fetch('{{ url('admin/customers') }}/' + contactId + '/whatsapp-chat', {
+                headers: { 'Accept': 'application/json' }
+            })
+                .then(function (res) {
+                    if (!res.ok) throw new Error('Request failed with status ' + res.status);
+                    return res.json();
+                })
+                .then(function (data) {
+                    document.getElementById('wcAvatar').textContent = getMessageHistoryInitials(data.name);
+                    document.getElementById('wcName').textContent = data.name;
+                    document.getElementById('wcPhone').textContent = formatMessageHistoryPhone(data.phone_number);
+
+                    var body = document.getElementById('wcBody');
+                    body.innerHTML = '';
+
+                    if (!data.messages.length) {
+                        var empty = document.createElement('div');
+                        empty.className = 'wc-empty';
+                        empty.textContent = 'No conversation yet.';
+                        body.appendChild(empty);
+                    } else {
+                        var lastDateLabel = null;
+
+                        data.messages.forEach(function (m) {
+                            var d = parseMessageHistoryDate(m.timestamp);
+                            var dateLabel = d ? formatMessageHistoryDateOnly(m.timestamp) : null;
+
+                            if (dateLabel && dateLabel !== lastDateLabel) {
+                                var sep = document.createElement('div');
+                                sep.className = 'wc-date-sep';
+                                var sepLabel = document.createElement('span');
+                                sepLabel.textContent = dateLabel;
+                                sep.appendChild(sepLabel);
+                                body.appendChild(sep);
+                                lastDateLabel = dateLabel;
+                            }
+
+                            var row = document.createElement('div');
+                            row.className = 'wc-row ' + (m.direction === 'sent' ? 'wc-row-sent' : 'wc-row-received');
+
+                            var bubble = document.createElement('div');
+                            bubble.className = 'wc-bubble ' + (m.direction === 'sent' ? 'wc-bubble-sent' : 'wc-bubble-received');
+
+                            var text = document.createElement('div');
+                            text.className = 'wc-bubble-text';
+                            text.textContent = m.message || (m.type && m.type !== 'text' ? '[' + m.type + ']' : '');
+                            bubble.appendChild(text);
+
+                            var time = document.createElement('div');
+                            time.className = 'wc-bubble-time';
+                            time.textContent = d ? (('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2)) : '';
+                            bubble.appendChild(time);
+
+                            row.appendChild(bubble);
+                            body.appendChild(row);
+                        });
+                    }
+
+                    document.getElementById('whatsappChatModal').classList.remove('hidden');
+                    document.getElementById('whatsappChatModal').classList.add('flex');
+                    body.scrollTop = body.scrollHeight;
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    alert('Unable to load WhatsApp chat. Please try again.');
+                });
+        }
+
+        function closeWhatsappChatModal() {
+            document.getElementById('whatsappChatModal').classList.remove('flex');
+            document.getElementById('whatsappChatModal').classList.add('hidden');
+        }
+
         document.getElementById('messageHistorySendBtn').addEventListener('click', function () {
             if (!messageHistoryCurrentContactId) return;
             var row = document.querySelector('tr[data-contact-id="' + messageHistoryCurrentContactId + '"]');
@@ -587,6 +693,7 @@
             if (e.key === 'Escape') {
                 closeCustomerModal();
                 closeMessageHistoryModal();
+                closeWhatsappChatModal();
             }
         });
 
@@ -1025,6 +1132,169 @@
 
         .mh-btn-primary:active {
             transform: translateY(0);
+        }
+
+        /* WhatsApp chat modal */
+        .wc-backdrop {
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .wc-card {
+            width: 420px;
+            max-width: calc(100vw - 48px);
+            max-height: calc(100vh - 64px);
+            display: flex;
+            flex-direction: column;
+            background: #efeae2;
+            border-radius: 16px;
+            box-shadow: 0 24px 64px rgba(15, 23, 42, 0.35);
+            font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+        }
+
+        .wc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 18px;
+            background: #075e54;
+            color: #ffffff;
+        }
+
+        .wc-header-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .wc-avatar {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #128c7e;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wc-name {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .wc-phone {
+            margin: 2px 0 0;
+            font-size: 12px;
+            color: #d9f2ee;
+        }
+
+        .wc-close-btn {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background-color 0.15s ease;
+        }
+
+        .wc-close-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .wc-body {
+            flex: 1;
+            min-height: 320px;
+            overflow-y: auto;
+            padding: 16px;
+            background-color: #efeae2;
+            background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+            background-size: 14px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .wc-empty {
+            margin: auto;
+            font-size: 13px;
+            color: #8a92a3;
+        }
+
+        .wc-date-sep {
+            align-self: center;
+            margin: 10px 0;
+        }
+
+        .wc-date-sep span {
+            background: #e1f0fb;
+            color: #4b5565;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        .wc-row {
+            display: flex;
+            margin: 2px 0;
+        }
+
+        .wc-row-sent {
+            justify-content: flex-end;
+        }
+
+        .wc-row-received {
+            justify-content: flex-start;
+        }
+
+        .wc-bubble {
+            max-width: 75%;
+            padding: 6px 9px 8px;
+            border-radius: 8px;
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .wc-bubble-sent {
+            background: #d9fdd3;
+            border-top-right-radius: 0;
+        }
+
+        .wc-bubble-received {
+            background: #ffffff;
+            border-top-left-radius: 0;
+        }
+
+        .wc-bubble-text {
+            font-size: 13.5px;
+            color: #111b21;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .wc-bubble-time {
+            align-self: flex-end;
+            font-size: 10.5px;
+            color: #667781;
         }
 
     </style>

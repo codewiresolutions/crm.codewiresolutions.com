@@ -55,6 +55,7 @@ Route::middleware(['auth', 'active', 'role:admin,manager,user'])->prefix('admin'
         Route::patch('/customers/{contact}/selected-message', [ContactController::class, 'updateSelectedMessage'])->name('customers.update-selected-message');
         Route::patch('/customers/{contact}/toggle-interested', [ContactController::class, 'toggleInterested'])->name('customers.toggle-interested');
         Route::get('/customers/{contact}/messages', [ContactController::class, 'messages'])->name('customers.messages');
+        Route::get('/customers/{contact}/whatsapp-chat', [ContactController::class, 'whatsappChat'])->name('customers.whatsapp-chat');
 
         Route::get('/groups', [ContactGroupController::class, 'index'])->name('groups.index');
         Route::patch('/groups/{group}/selected-message', [ContactGroupController::class, 'updateSelectedMessage'])->name('groups.update-selected-message');

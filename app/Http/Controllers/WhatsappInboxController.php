@@ -9,7 +9,7 @@ class WhatsappInboxController extends Controller
     public function index()
     {
         $response = Http::withoutVerifying()
-            ->timeout(20)
+            ->timeout(600)
             ->get('https://webwhatsappjs.codewiresolutions.com/messages');
 
         $messages = $response->successful() ? ($response->json('messages') ?? []) : [];
