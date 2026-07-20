@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class PermissionController extends Controller
 {
     private const ROLES = ['manager', 'user'];
-    private const MENU_KEYS = ['dashboard', 'whatsapp', 'customers', 'csv'];
+    private const MENU_KEYS = ['dashboard', 'whatsapp', 'whatsapp-inbox', 'customers', 'csv'];
 
     public function edit()
     {

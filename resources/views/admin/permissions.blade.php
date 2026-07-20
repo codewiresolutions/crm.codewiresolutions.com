@@ -24,7 +24,7 @@
                 <tbody>
                     @foreach($menuKeys as $menuKey)
                         <tr>
-                            <td class="border-b border-gray-200 p-2.5">{{ ucfirst($menuKey) }}</td>
+                            <td class="border-b border-gray-200 p-2.5">{{ ucwords(str_replace('-', ' ', $menuKey)) }}</td>
                             @foreach($roles as $role)
                                 @php
                                     $isVisible = optional($permissions->get($role, collect())->firstWhere('menu_key', $menuKey))->is_visible ?? false;

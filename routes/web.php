@@ -7,10 +7,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContactGroupController;
 use App\Http\Controllers\ResendIntervalController;
+use App\Http\Controllers\WhatsappInboxController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth/login');
 });
 
 Route::middleware('guest')->group(function () {
@@ -35,6 +36,10 @@ Route::middleware(['auth', 'active', 'role:admin,manager,user'])->prefix('admin'
         Route::get('/whatsapp/{message}/edit', [ContactController::class, 'editMessage'])->name('whatsapp.edit');
         Route::put('/whatsapp/{message}', [ContactController::class, 'updateMessage'])->name('whatsapp.update');
         Route::delete('/whatsapp/{message}', [ContactController::class, 'destroyMessage'])->name('whatsapp.destroy');
+    });
+
+    Route::middleware('menu:whatsapp-inbox')->group(function () {
+        Route::get('/whatsapp-inbox', [WhatsappInboxController::class, 'index'])->name('whatsapp-inbox');
     });
 
     Route::middleware('menu:customers')->group(function () {
