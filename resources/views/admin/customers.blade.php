@@ -667,9 +667,66 @@
                 });
         }
 
-        function openWhatsappChatModal(contactId) {
-            wcCurrentContactId = contactId;
-            document.getElementById('wcMessageInput').value = '';
+        var wcPollTimer = null;
+        var wcPollIntervalMs = 5000;
+        var wcMessagesSignature = null;
+
+        function renderWhatsappChatMessages(data) {
+            document.getElementById('wcAvatar').textContent = getMessageHistoryInitials(data.name);
+            document.getElementById('wcName').textContent = data.name;
+            document.getElementById('wcPhone').textContent = formatMessageHistoryPhone(data.phone_number);
+
+            var body = document.getElementById('wcBody');
+            var wasNearBottom = (body.scrollHeight - body.scrollTop - body.clientHeight) < 60;
+            body.innerHTML = '';
+
+            if (!data.messages.length) {
+                var empty = document.createElement('div');
+                empty.className = 'wc-empty';
+                empty.textContent = 'No conversation yet.';
+                body.appendChild(empty);
+            } else {
+                var lastDateLabel = null;
+
+                data.messages.forEach(function (m) {
+                    var d = parseMessageHistoryDate(m.timestamp);
+                    var dateLabel = d ? formatMessageHistoryDateOnly(m.timestamp) : null;
+
+                    if (dateLabel && dateLabel !== lastDateLabel) {
+                        var sep = document.createElement('div');
+                        sep.className = 'wc-date-sep';
+                        var sepLabel = document.createElement('span');
+                        sepLabel.textContent = dateLabel;
+                        sep.appendChild(sepLabel);
+                        body.appendChild(sep);
+                        lastDateLabel = dateLabel;
+                    }
+
+                    var row = document.createElement('div');
+                    row.className = 'wc-row ' + (m.direction === 'sent' ? 'wc-row-sent' : 'wc-row-received');
+
+                    var bubble = document.createElement('div');
+                    bubble.className = 'wc-bubble ' + (m.direction === 'sent' ? 'wc-bubble-sent' : 'wc-bubble-received');
+
+                    var text = document.createElement('div');
+                    text.className = 'wc-bubble-text';
+                    text.textContent = m.message || (m.type && m.type !== 'text' ? '[' + m.type + ']' : '');
+                    bubble.appendChild(text);
+
+                    var time = document.createElement('div');
+                    time.className = 'wc-bubble-time';
+                    time.textContent = d ? (('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2)) : '';
+                    bubble.appendChild(time);
+
+                    row.appendChild(bubble);
+                    body.appendChild(row);
+                });
+            }
+
+            if (wasNearBottom) body.scrollTop = body.scrollHeight;
+        }
+
+        function fetchWhatsappChat(contactId, isPoll) {
             fetch('{{ url('admin/customers') }}/' + contactId + '/whatsapp-chat', {
                 headers: { 'Accept': 'application/json' }
             })
@@ -678,70 +735,45 @@
                     return res.json();
                 })
                 .then(function (data) {
-                    document.getElementById('wcAvatar').textContent = getMessageHistoryInitials(data.name);
-                    document.getElementById('wcName').textContent = data.name;
-                    document.getElementById('wcPhone').textContent = formatMessageHistoryPhone(data.phone_number);
+                    if (wcCurrentContactId !== contactId) return;
 
-                    var body = document.getElementById('wcBody');
-                    body.innerHTML = '';
+                    var signature = data.messages.length + ':' + (data.messages.length ? data.messages[data.messages.length - 1].timestamp : '');
+                    if (isPoll && signature === wcMessagesSignature) return;
+                    wcMessagesSignature = signature;
 
-                    if (!data.messages.length) {
-                        var empty = document.createElement('div');
-                        empty.className = 'wc-empty';
-                        empty.textContent = 'No conversation yet.';
-                        body.appendChild(empty);
-                    } else {
-                        var lastDateLabel = null;
-
-                        data.messages.forEach(function (m) {
-                            var d = parseMessageHistoryDate(m.timestamp);
-                            var dateLabel = d ? formatMessageHistoryDateOnly(m.timestamp) : null;
-
-                            if (dateLabel && dateLabel !== lastDateLabel) {
-                                var sep = document.createElement('div');
-                                sep.className = 'wc-date-sep';
-                                var sepLabel = document.createElement('span');
-                                sepLabel.textContent = dateLabel;
-                                sep.appendChild(sepLabel);
-                                body.appendChild(sep);
-                                lastDateLabel = dateLabel;
-                            }
-
-                            var row = document.createElement('div');
-                            row.className = 'wc-row ' + (m.direction === 'sent' ? 'wc-row-sent' : 'wc-row-received');
-
-                            var bubble = document.createElement('div');
-                            bubble.className = 'wc-bubble ' + (m.direction === 'sent' ? 'wc-bubble-sent' : 'wc-bubble-received');
-
-                            var text = document.createElement('div');
-                            text.className = 'wc-bubble-text';
-                            text.textContent = m.message || (m.type && m.type !== 'text' ? '[' + m.type + ']' : '');
-                            bubble.appendChild(text);
-
-                            var time = document.createElement('div');
-                            time.className = 'wc-bubble-time';
-                            time.textContent = d ? (('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2)) : '';
-                            bubble.appendChild(time);
-
-                            row.appendChild(bubble);
-                            body.appendChild(row);
-                        });
-                    }
-
-                    document.getElementById('whatsappChatModal').classList.remove('hidden');
-                    document.getElementById('whatsappChatModal').classList.add('flex');
-                    body.scrollTop = body.scrollHeight;
+                    renderWhatsappChatMessages(data);
                 })
                 .catch(function (err) {
                     console.error(err);
-                    alert('Unable to load WhatsApp chat. Please try again.');
+                    if (!isPoll) alert('Unable to load WhatsApp chat. Please try again.');
                 });
+        }
+
+        function openWhatsappChatModal(contactId) {
+            wcCurrentContactId = contactId;
+            wcMessagesSignature = null;
+            document.getElementById('wcMessageInput').value = '';
+
+            document.getElementById('whatsappChatModal').classList.remove('hidden');
+            document.getElementById('whatsappChatModal').classList.add('flex');
+
+            fetchWhatsappChat(contactId, false);
+
+            if (wcPollTimer) clearInterval(wcPollTimer);
+            wcPollTimer = setInterval(function () {
+                if (wcCurrentContactId) fetchWhatsappChat(wcCurrentContactId, true);
+            }, wcPollIntervalMs);
         }
 
         function closeWhatsappChatModal() {
             document.getElementById('whatsappChatModal').classList.remove('flex');
             document.getElementById('whatsappChatModal').classList.add('hidden');
             wcCurrentContactId = null;
+            wcMessagesSignature = null;
+            if (wcPollTimer) {
+                clearInterval(wcPollTimer);
+                wcPollTimer = null;
+            }
         }
 
         document.getElementById('messageHistorySendBtn').addEventListener('click', function () {
