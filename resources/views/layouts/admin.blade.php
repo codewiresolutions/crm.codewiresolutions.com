@@ -17,7 +17,7 @@
                 <a href="{{ route('admin.dashboard') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ request()->routeIs('admin.dashboard') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">Dashboard</a>
             @endif
             @if(auth()->user()->canViewMenu('whatsapp'))
-                <a href="{{ route('admin.whatsapp') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ request()->routeIs('admin.whatsapp*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">WhatsApp integration</a>
+                <a href="{{ route('admin.whatsapp') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ (request()->routeIs('admin.whatsapp') || request()->routeIs('admin.whatsapp.*')) ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">WhatsApp integration</a>
             @endif
             @if(auth()->user()->canViewMenu('whatsapp-inbox'))
                 <a href="{{ route('admin.whatsapp-inbox') }}" class="rounded-lg px-3 py-2.5 text-gray-300 no-underline {{ request()->routeIs('admin.whatsapp-inbox*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}">WhatsApp Messages</a>
