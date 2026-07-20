@@ -654,9 +654,11 @@
                 .then(function (res) {
                     if (!res.ok) throw new Error('Request failed with status ' + res.status);
                     input.value = '';
+                    wcFetchSeq++;
                     appendWhatsappChatBubble({ message: message });
                     var sentAtCell = row ? row.children[5] : null;
                     if (sentAtCell) sentAtCell.textContent = 'Just now';
+                    if (wcCurrentContactId) fetchWhatsappChat(wcCurrentContactId, true);
                 })
                 .catch(function (err) {
                     console.error(err);
@@ -670,6 +672,7 @@
         var wcPollTimer = null;
         var wcPollIntervalMs = 5000;
         var wcMessagesSignature = null;
+        var wcFetchSeq = 0;
 
         function renderWhatsappChatMessages(data) {
             document.getElementById('wcAvatar').textContent = getMessageHistoryInitials(data.name);
@@ -727,6 +730,8 @@
         }
 
         function fetchWhatsappChat(contactId, isPoll) {
+            var seq = ++wcFetchSeq;
+
             fetch('{{ url('admin/customers') }}/' + contactId + '/whatsapp-chat', {
                 headers: { 'Accept': 'application/json' }
             })
@@ -735,7 +740,7 @@
                     return res.json();
                 })
                 .then(function (data) {
-                    if (wcCurrentContactId !== contactId) return;
+                    if (seq !== wcFetchSeq || wcCurrentContactId !== contactId) return;
 
                     var signature = data.messages.length + ':' + (data.messages.length ? data.messages[data.messages.length - 1].timestamp : '');
                     if (isPoll && signature === wcMessagesSignature) return;
