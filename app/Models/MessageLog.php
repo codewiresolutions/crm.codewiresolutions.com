@@ -10,6 +10,8 @@ class MessageLog extends Model
     protected $fillable = [
         'contact_id',
         'whatsapp_message_id',
+        'direction',
+        'type',
         'message',
         'sent_at',
     ];

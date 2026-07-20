@@ -43,6 +43,11 @@ class Contact extends Model
         return $this->hasMany(MessageLog::class);
     }
 
+    public function sentMessageLogs(): HasMany
+    {
+        return $this->messageLogs()->where('direction', 'sent');
+    }
+
     public function sendWhatsappMessage(?string $message, ?int $messageId): bool
     {
         $response = Http::withoutVerifying()
@@ -61,6 +66,8 @@ class Contact extends Model
         MessageLog::create([
             'contact_id' => $this->id,
             'whatsapp_message_id' => $messageId,
+            'direction' => 'sent',
+            'type' => 'text',
             'message' => $message ?? '',
             'sent_at' => now(),
         ]);

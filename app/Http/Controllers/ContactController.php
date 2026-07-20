@@ -162,7 +162,7 @@ class ContactController extends Controller
 
     public function exportWithMessages()
     {
-        $contacts = Contact::with(['userType', 'messageLogs'])->latest()->get();
+        $contacts = Contact::with(['userType', 'sentMessageLogs'])->latest()->get();
 
         $filename = 'customers-with-messages-'.now()->format('Y-m-d-His').'.csv';
 
@@ -186,13 +186,13 @@ class ContactController extends Controller
                     strip_tags($contact->description ?? ''),
                 ];
 
-                if ($contact->messageLogs->isEmpty()) {
+                if ($contact->sentMessageLogs->isEmpty()) {
                     fputcsv($handle, array_merge($base, ['', '']));
 
                     continue;
                 }
 
-                foreach ($contact->messageLogs as $log) {
+                foreach ($contact->sentMessageLogs as $log) {
                     fputcsv($handle, array_merge($base, [
                         $log->message,
                         $log->sent_at?->format('Y-m-d H:i') ?? '',
@@ -279,7 +279,7 @@ class ContactController extends Controller
 
     public function messages(Contact $contact)
     {
-        $logs = $contact->messageLogs()->latest('sent_at')->get();
+        $logs = $contact->sentMessageLogs()->latest('sent_at')->get();
 
         return response()->json([
             'name' => $contact->name,
@@ -299,15 +299,7 @@ class ContactController extends Controller
 
     public function whatsappChat(Contact $contact)
     {
-        $sent = $contact->messageLogs()->get()->map(fn (MessageLog $log) => [
-            'direction' => 'sent',
-            'type' => 'text',
-            'message' => $log->message,
-            'timestamp' => optional($log->sent_at)->toIso8601String(),
-        ]);
-
         $targetNumber = $this->normalizePhoneNumber($contact->phone_number);
-        $received = collect();
         $liveUnavailable = false;
 
         try {
@@ -317,17 +309,15 @@ class ContactController extends Controller
                 ->get('https://webwhatsappjs.codewiresolutions.com/messages');
 
             if ($response->successful()) {
-                $received = collect($response->json('messages') ?? [])
+                $incoming = collect($response->json('messages') ?? [])
                     ->filter(fn ($item) => empty($item['isGroup'])
+                        && $targetNumber !== ''
                         && $this->normalizePhoneNumber($item['from'] ?? '') === $targetNumber
-                        && $targetNumber !== '')
-                    ->map(fn ($item) => [
-                        'direction' => 'received',
-                        'type' => $item['type'] ?? 'text',
-                        'message' => $item['message'] ?? '',
-                        'timestamp' => $item['timestamp'] ?? null,
-                    ])
-                    ->values();
+                        && ! empty($item['timestamp']));
+
+                if ($incoming->isNotEmpty()) {
+                    $this->storeReceivedMessages($contact, $incoming);
+                }
             } else {
                 $liveUnavailable = true;
             }
@@ -335,8 +325,15 @@ class ContactController extends Controller
             $liveUnavailable = true;
         }
 
-        $thread = $sent->concat($received)
-            ->sortBy(fn ($item) => $item['timestamp'] ? \Illuminate\Support\Carbon::parse($item['timestamp'])->timestamp : 0)
+        $thread = $contact->messageLogs()
+            ->orderBy('sent_at')
+            ->get()
+            ->map(fn (MessageLog $log) => [
+                'direction' => $log->direction,
+                'type' => $log->type,
+                'message' => $log->message,
+                'timestamp' => optional($log->sent_at)->toIso8601String(),
+            ])
             ->values();
 
         return response()->json([
@@ -345,6 +342,35 @@ class ContactController extends Controller
             'messages' => $thread,
             'live_unavailable' => $liveUnavailable,
         ]);
+    }
+
+    private function storeReceivedMessages(Contact $contact, \Illuminate\Support\Collection $incoming): void
+    {
+        $existing = $contact->messageLogs()
+            ->where('direction', 'received')
+            ->get(['sent_at', 'message'])
+            ->map(fn (MessageLog $log) => optional($log->sent_at)->toIso8601String().'|'.$log->message)
+            ->flip();
+
+        foreach ($incoming as $item) {
+            $timestamp = \Illuminate\Support\Carbon::parse($item['timestamp']);
+            $message = $item['message'] ?? '';
+            $key = $timestamp->toIso8601String().'|'.$message;
+
+            if ($existing->has($key)) {
+                continue;
+            }
+
+            MessageLog::create([
+                'contact_id' => $contact->id,
+                'direction' => 'received',
+                'type' => $item['type'] ?? 'text',
+                'message' => $message,
+                'sent_at' => $timestamp,
+            ]);
+
+            $existing->put($key, true);
+        }
     }
 
     private function normalizePhoneNumber(?string $number): string
