@@ -13,6 +13,9 @@ class MessageLog extends Model
         'direction',
         'type',
         'message',
+        'media_url',
+        'media_filename',
+        'media_mimetype',
         'sent_at',
     ];
 

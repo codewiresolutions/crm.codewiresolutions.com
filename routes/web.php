@@ -48,6 +48,8 @@ Route::middleware(['auth', 'active', 'role:admin,manager,user'])->prefix('admin'
         Route::get('/customers/export-with-messages', [ContactController::class, 'exportWithMessages'])->name('customers.export-with-messages');
         Route::post('/customers', [ContactController::class, 'store'])->name('customers.store');
         Route::post('/customers/send-whatsapp', [ContactController::class, 'sendWhatsapp'])->name('customers.send-whatsapp');
+        Route::post('/customers/send-whatsapp-media', [ContactController::class, 'sendWhatsappMedia'])->name('customers.send-whatsapp-media');
+        Route::get('/customers/media/{filename}', [ContactController::class, 'media'])->name('customers.media');
         Route::post('/customers/bulk-send-whatsapp', [ContactController::class, 'bulkSendWhatsapp'])->name('customers.bulk-send-whatsapp');
         Route::get('/customers/{contact}/edit', [ContactController::class, 'edit'])->name('customers.edit');
         Route::put('/customers/{contact}', [ContactController::class, 'update'])->name('customers.update');

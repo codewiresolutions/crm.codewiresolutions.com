@@ -12,6 +12,7 @@ use App\Models\WhatsappMessage;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class ContactController extends Controller
 {
@@ -89,6 +90,24 @@ class ContactController extends Controller
         return back()->with('error', 'Unable to send WhatsApp message.');
     }
 
+    public function sendWhatsappMedia(Request $request)
+    {
+        $data = $request->validate([
+            'number' => ['required', 'string'],
+            'file' => ['required', 'file', 'max:20480'],
+            'caption' => ['nullable', 'string', 'max:1000'],
+            'message_id' => ['nullable', 'exists:whatsapp_messages,id'],
+        ]);
+
+        $contact = Contact::where('phone_number', $data['number'])->first();
+
+        if ($contact && $contact->sendWhatsappMedia($data['file'], $data['caption'] ?? null, $data['message_id'] ?? null)) {
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Unable to send WhatsApp media.'], 422);
+    }
+
     public function bulkSendWhatsapp(Request $request)
     {
         $data = $request->validate([
@@ -122,8 +141,44 @@ class ContactController extends Controller
         $messages = WhatsappMessage::latest()->get();
         $groups = ContactGroup::with(['contacts', 'pendingResend'])->latest()->get();
         $resendIntervals = ResendInterval::orderBy('minutes')->get();
+        $callCounts = $this->fetchCallCounts($contacts);
 
-        return view('admin.customers', compact('contacts', 'latestMessage', 'userTypes', 'messages', 'groups', 'resendIntervals'));
+        return view('admin.customers', compact('contacts', 'latestMessage', 'userTypes', 'messages', 'groups', 'resendIntervals', 'callCounts'));
+    }
+
+    private function fetchCallCounts(iterable $contacts): array
+    {
+        $counts = [];
+
+        try {
+            $response = Http::withoutVerifying()
+                ->connectTimeout(5)
+                ->timeout(10)
+                ->get('https://webwhatsappjs.codewiresolutions.com/calls');
+
+            if (! $response->successful()) {
+                return $counts;
+            }
+
+            $calls = collect($response->json('calls') ?? [])
+                ->filter(fn ($call) => empty($call['isGroup']));
+
+            foreach ($contacts as $contact) {
+                $target = $this->normalizePhoneNumber($contact->phone_number);
+
+                if ($target === '') {
+                    continue;
+                }
+
+                $counts[$contact->id] = $calls
+                    ->filter(fn ($call) => $this->normalizePhoneNumber($call['from'] ?? '') === $target)
+                    ->count();
+            }
+        } catch (ConnectionException $e) {
+            // Leave counts empty when the calls API is unreachable.
+        }
+
+        return $counts;
     }
 
     public function export()
@@ -233,8 +288,9 @@ class ContactController extends Controller
         $messages = WhatsappMessage::latest()->get();
         $groups = ContactGroup::with(['contacts', 'pendingResend'])->latest()->get();
         $resendIntervals = ResendInterval::orderBy('minutes')->get();
+        $callCounts = $this->fetchCallCounts($contacts);
 
-        return view('admin.customers', compact('contacts', 'contact', 'userTypes', 'latestMessage', 'messages', 'groups', 'resendIntervals'));
+        return view('admin.customers', compact('contacts', 'contact', 'userTypes', 'latestMessage', 'messages', 'groups', 'resendIntervals', 'callCounts'));
     }
 
     public function update(Request $request, Contact $contact)
@@ -332,6 +388,9 @@ class ContactController extends Controller
                 'direction' => $log->direction,
                 'type' => $log->type,
                 'message' => $log->message,
+                'media_url' => $log->media_url,
+                'media_filename' => $log->media_filename,
+                'media_mimetype' => $log->media_mimetype,
                 'timestamp' => optional($log->sent_at)->toIso8601String(),
             ])
             ->values();
@@ -361,16 +420,71 @@ class ContactController extends Controller
                 continue;
             }
 
+            $media = $item['media'] ?? null;
+            $mediaUrl = null;
+            $mediaFilename = null;
+
+            if (! empty($media['url']) && ! empty($media['filename'])) {
+                $mediaFilename = $this->downloadReceivedMedia($media);
+
+                if ($mediaFilename) {
+                    $mediaUrl = route('admin.customers.media', ['filename' => $mediaFilename]);
+                }
+            }
+
             MessageLog::create([
                 'contact_id' => $contact->id,
                 'direction' => 'received',
                 'type' => $item['type'] ?? 'text',
-                'message' => $message,
+                'message' => $media['caption'] ?? $message,
+                'media_url' => $mediaUrl,
+                'media_filename' => $mediaFilename,
+                'media_mimetype' => $media['mimetype'] ?? null,
                 'sent_at' => $timestamp,
             ]);
 
             $existing->put($key, true);
         }
+    }
+
+    private function downloadReceivedMedia(array $media): ?string
+    {
+        $filename = basename($media['filename']);
+        $storedPath = 'whatsapp/'.$filename;
+
+        if (Storage::disk('public')->exists($storedPath)) {
+            return $filename;
+        }
+
+        $externalUrl = str_starts_with($media['url'], 'http')
+            ? $media['url']
+            : 'https://webwhatsappjs.codewiresolutions.com'.$media['url'];
+
+        try {
+            $response = Http::withoutVerifying()->timeout(15)->get($externalUrl);
+
+            if (! $response->successful()) {
+                return null;
+            }
+
+            Storage::disk('public')->put($storedPath, $response->body());
+
+            return $filename;
+        } catch (ConnectionException $e) {
+            return null;
+        }
+    }
+
+    public function media(string $filename)
+    {
+        $filename = basename($filename);
+        $path = 'whatsapp/'.$filename;
+
+        if (! Storage::disk('public')->exists($path)) {
+            abort(404);
+        }
+
+        return response()->file(Storage::disk('public')->path($path));
     }
 
     private function normalizePhoneNumber(?string $number): string

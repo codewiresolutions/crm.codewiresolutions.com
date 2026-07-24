@@ -143,8 +143,24 @@
                 </button>
             </div>
             <div id="wcBody" class="wc-body"></div>
+            <div id="wcPreviewBar" class="wc-preview-bar hidden">
+                <div id="wcPreviewThumb" class="wc-preview-thumb"></div>
+                <div id="wcPreviewName" class="wc-preview-name"></div>
+                <button type="button" class="wc-preview-remove" title="Remove attachment" onclick="clearWhatsappAttachment()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
             <div class="wc-footer">
-                <input type="text" id="wcMessageInput" class="wc-input" placeholder="Type a message" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); sendWhatsappChatMessage(); }">
+                <input type="file" id="wcFileInput" class="hidden" onchange="handleWhatsappFileSelect(this.files[0]); this.value = '';">
+                <button type="button" class="wc-attach-btn" title="Attach media" onclick="document.getElementById('wcFileInput').click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                    </svg>
+                </button>
+                <input type="text" id="wcMessageInput" class="wc-input" placeholder="Type a message" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); sendWhatsappChatMessage(); }" onpaste="handleWhatsappPaste(event)">
                 <button type="button" id="wcSendBtn" class="wc-send-btn" title="Send" onclick="sendWhatsappChatMessage()">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
                         <path d="M2.01 21l20.99-9-20.99-9-.01 7 15 2-15 2z"></path>
@@ -203,6 +219,7 @@
 {{--                    <th class="border-b border-gray-200 p-2.5 text-left">Description</th>--}}
 
                     <th class="border-b border-gray-200 p-2.5 text-left">Sent At</th>
+                    <th class="border-b border-gray-200 p-2.5 text-left">Calls</th>
                     <th class="border-b border-gray-200 p-2.5 text-left">Actions</th>
                 </tr>
             </thead>
@@ -227,6 +244,15 @@
 {{--                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->description }}</td>--}}
 
                         <td class="border-b border-gray-200 p-2.5">{{ $contactItem->message_sent_at ? $contactItem->message_sent_at : 'Not sent yet' }}</td>
+                        <td class="border-b border-gray-200 p-2.5">
+                            @php $callCount = $callCounts[$contactItem->id] ?? 0; @endphp
+                            <span class="call-count-badge {{ $callCount > 0 ? 'call-count-badge-active' : '' }}" title="{{ $callCount }} call(s)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                </svg>
+                                {{ $callCount }}
+                            </span>
+                        </td>
                         <td class="flex items-center gap-0.5 whitespace-nowrap border-b border-gray-200 p-2.5">
                             <button
                                 type="button"
@@ -590,6 +616,99 @@
         }
 
         var wcCurrentContactId = null;
+        var wcPendingFile = null;
+
+        function handleWhatsappFileSelect(file) {
+            if (!file) return;
+            wcPendingFile = file;
+
+            var previewBar = document.getElementById('wcPreviewBar');
+            var thumb = document.getElementById('wcPreviewThumb');
+            var name = document.getElementById('wcPreviewName');
+
+            thumb.innerHTML = '';
+            if (file.type.indexOf('image/') === 0) {
+                var img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                thumb.appendChild(img);
+            } else {
+                thumb.textContent = wcFileTypeIcon(file.type);
+            }
+            name.textContent = file.name;
+
+            previewBar.classList.remove('hidden');
+            document.getElementById('wcMessageInput').focus();
+        }
+
+        function clearWhatsappAttachment() {
+            wcPendingFile = null;
+            document.getElementById('wcPreviewBar').classList.add('hidden');
+            document.getElementById('wcPreviewThumb').innerHTML = '';
+            document.getElementById('wcPreviewName').textContent = '';
+        }
+
+        function handleWhatsappPaste(event) {
+            var items = (event.clipboardData || window.clipboardData).items;
+            if (!items) return;
+
+            for (var i = 0; i < items.length; i++) {
+                if (items[i].kind === 'file') {
+                    var file = items[i].getAsFile();
+                    if (file) {
+                        event.preventDefault();
+                        handleWhatsappFileSelect(file);
+                    }
+                    break;
+                }
+            }
+        }
+
+        function wcFileTypeIcon(mimetype) {
+            mimetype = mimetype || '';
+            if (mimetype.indexOf('video/') === 0) return '🎬';
+            if (mimetype.indexOf('audio/') === 0) return '🎵';
+            return '📄';
+        }
+
+        function buildWhatsappMediaElement(m) {
+            var wrap = document.createElement('div');
+            wrap.className = 'wc-bubble-media';
+
+            var mimetype = m.media_mimetype || '';
+            var type = m.type || (mimetype.split('/')[0]);
+
+            if (type === 'image' || mimetype.indexOf('image/') === 0) {
+                var link = document.createElement('a');
+                link.href = m.media_url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                var img = document.createElement('img');
+                img.src = m.media_url;
+                img.alt = m.media_filename || 'image';
+                link.appendChild(img);
+                wrap.appendChild(link);
+            } else if (type === 'video' || mimetype.indexOf('video/') === 0) {
+                var video = document.createElement('video');
+                video.src = m.media_url;
+                video.controls = true;
+                wrap.appendChild(video);
+            } else if (type === 'audio' || mimetype.indexOf('audio/') === 0) {
+                var audio = document.createElement('audio');
+                audio.src = m.media_url;
+                audio.controls = true;
+                wrap.appendChild(audio);
+            } else {
+                var docLink = document.createElement('a');
+                docLink.href = m.media_url;
+                docLink.target = '_blank';
+                docLink.rel = 'noopener noreferrer';
+                docLink.className = 'wc-bubble-doc';
+                docLink.textContent = '📄 ' + (m.media_filename || 'Document');
+                wrap.appendChild(docLink);
+            }
+
+            return wrap;
+        }
 
         function appendWhatsappChatBubble(data) {
             var body = document.getElementById('wcBody');
@@ -632,7 +751,8 @@
         function sendWhatsappChatMessage() {
             var input = document.getElementById('wcMessageInput');
             var message = input.value.trim();
-            if (!message || !wcCurrentContactId) return;
+            if (!wcPendingFile && !message) return;
+            if (!wcCurrentContactId) return;
 
             var row = document.querySelector('tr[data-contact-id="' + wcCurrentContactId + '"]');
             var phoneInput = row ? row.querySelector('input[name="number"]') : null;
@@ -641,6 +761,39 @@
 
             var sendBtn = document.getElementById('wcSendBtn');
             sendBtn.disabled = true;
+
+            if (wcPendingFile) {
+                var formData = new FormData();
+                formData.append('number', number);
+                formData.append('file', wcPendingFile);
+                formData.append('caption', message);
+
+                fetch('{{ route('admin.customers.send-whatsapp-media') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                    .then(function (res) {
+                        if (!res.ok) throw new Error('Request failed with status ' + res.status);
+                        input.value = '';
+                        clearWhatsappAttachment();
+                        var sentAtCell = row ? row.children[5] : null;
+                        if (sentAtCell) sentAtCell.textContent = 'Just now';
+                        if (wcCurrentContactId) fetchWhatsappChat(wcCurrentContactId, false);
+                    })
+                    .catch(function (err) {
+                        console.error(err);
+                        alert('Unable to send WhatsApp media. Please try again.');
+                    })
+                    .finally(function () {
+                        sendBtn.disabled = false;
+                    });
+
+                return;
+            }
 
             fetch('{{ route('admin.customers.send-whatsapp') }}', {
                 method: 'POST',
@@ -711,10 +864,21 @@
                     var bubble = document.createElement('div');
                     bubble.className = 'wc-bubble ' + (m.direction === 'sent' ? 'wc-bubble-sent' : 'wc-bubble-received');
 
-                    var text = document.createElement('div');
-                    text.className = 'wc-bubble-text';
-                    text.textContent = m.message || (m.type && m.type !== 'text' ? '[' + m.type + ']' : '');
-                    bubble.appendChild(text);
+                    if (m.media_url) {
+                        bubble.appendChild(buildWhatsappMediaElement(m));
+                    }
+
+                    if (m.message) {
+                        var text = document.createElement('div');
+                        text.className = 'wc-bubble-text';
+                        text.textContent = m.message;
+                        bubble.appendChild(text);
+                    } else if (!m.media_url && m.type && m.type !== 'text') {
+                        var fallback = document.createElement('div');
+                        fallback.className = 'wc-bubble-text';
+                        fallback.textContent = '[' + m.type + ']';
+                        bubble.appendChild(fallback);
+                    }
 
                     var time = document.createElement('div');
                     time.className = 'wc-bubble-time';
@@ -758,6 +922,7 @@
             wcCurrentContactId = contactId;
             wcMessagesSignature = null;
             document.getElementById('wcMessageInput').value = '';
+            clearWhatsappAttachment();
 
             document.getElementById('whatsappChatModal').classList.remove('hidden');
             document.getElementById('whatsappChatModal').classList.add('flex');
@@ -1156,6 +1321,23 @@
             font-weight: 600;
         }
 
+        .call-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 9px;
+            border-radius: 999px;
+            background: #eef1f5;
+            color: #8a92a3;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .call-count-badge-active {
+            background: #e1f0fb;
+            color: #1d75b3;
+        }
+
         .mh-messages-list-wrap {
             max-height: 220px;
             overflow-y: auto;
@@ -1393,6 +1575,122 @@
         .wc-send-btn:disabled {
             opacity: 0.6;
             cursor: default;
+        }
+
+        .wc-attach-btn {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: #54656f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background-color 0.15s ease;
+        }
+
+        .wc-attach-btn:hover {
+            background: #e4e6ea;
+        }
+
+        .wc-preview-bar {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            background: #f0f2f5;
+            border-top: 1px solid #e4e6ea;
+        }
+
+        .wc-preview-bar.hidden {
+            display: none;
+        }
+
+        .wc-preview-thumb {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #dfe3e6;
+            font-size: 18px;
+        }
+
+        .wc-preview-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .wc-preview-name {
+            flex: 1;
+            min-width: 0;
+            font-size: 12.5px;
+            color: #111b21;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .wc-preview-remove {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: #667781;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .wc-preview-remove:hover {
+            background: #dfe3e6;
+        }
+
+        .wc-bubble-media {
+            display: flex;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .wc-bubble-media img,
+        .wc-bubble-media video {
+            max-width: 100%;
+            max-height: 260px;
+            border-radius: 6px;
+            display: block;
+        }
+
+        .wc-bubble-media audio {
+            width: 220px;
+        }
+
+        .wc-bubble-doc {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #111b21;
+            text-decoration: none;
+            background: rgba(0, 0, 0, 0.04);
+            padding: 6px 8px;
+            border-radius: 6px;
+        }
+
+        .wc-bubble-doc:hover {
+            text-decoration: underline;
         }
 
         .wc-body {
