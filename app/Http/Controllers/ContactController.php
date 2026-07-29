@@ -82,12 +82,18 @@ class ContactController extends Controller
         ]);
 
         $contact = Contact::where('phone_number', $data['number'])->first();
+        $sent = $contact && $contact->sendWhatsappMessage($data['message'] ?? '', $data['message_id'] ?? null);
 
-        if ($contact && $contact->sendWhatsappMessage($data['message'] ?? '', $data['message_id'] ?? null)) {
-            return back()->with('success', 'WhatsApp message sent successfully.');
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => $sent,
+                'message' => $sent ? 'WhatsApp message sent successfully.' : 'Unable to send WhatsApp message.',
+            ], $sent ? 200 : 422);
         }
 
-        return back()->with('error', 'Unable to send WhatsApp message.');
+        return $sent
+            ? back()->with('success', 'WhatsApp message sent successfully.')
+            : back()->with('error', 'Unable to send WhatsApp message.');
     }
 
     public function sendWhatsappMedia(Request $request)
@@ -144,6 +150,51 @@ class ContactController extends Controller
         $callCounts = $this->fetchCallCounts($contacts);
 
         return view('admin.customers', compact('contacts', 'latestMessage', 'userTypes', 'messages', 'groups', 'resendIntervals', 'callCounts'));
+    }
+
+    public function ringingCalls()
+    {
+        try {
+            $response = Http::withoutVerifying()
+                ->connectTimeout(5)
+                ->timeout(10)
+                ->get('https://webwhatsappjs.codewiresolutions.com/calls');
+
+            if (! $response->successful()) {
+                return response()->json(['calls' => []]);
+            }
+
+            $calls = collect($response->json('calls') ?? [])
+                ->filter(fn ($call) => ($call['status'] ?? '') === 'ringing' && empty($call['isGroup']))
+                ->map(function ($call) {
+                    $number = $call['from'] ?? '';
+                    $contact = $this->findContactByNumber($number);
+
+                    return [
+                        'id' => $call['id'] ?? null,
+                        'number' => $number,
+                        'name' => $contact->name ?? null,
+                        'isVideo' => $call['isVideo'] ?? false,
+                    ];
+                })
+                ->values();
+
+            return response()->json(['calls' => $calls]);
+        } catch (ConnectionException $e) {
+            return response()->json(['calls' => []]);
+        }
+    }
+
+    private function findContactByNumber(string $number): ?Contact
+    {
+        $target = $this->normalizePhoneNumber($number);
+
+        if ($target === '') {
+            return null;
+        }
+
+        return Contact::get(['id', 'name', 'phone_number'])
+            ->first(fn (Contact $contact) => $this->normalizePhoneNumber($contact->phone_number) === $target);
     }
 
     private function fetchCallCounts(iterable $contacts): array

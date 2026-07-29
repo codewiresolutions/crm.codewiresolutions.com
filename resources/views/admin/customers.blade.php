@@ -170,6 +170,27 @@
         </div>
     </div>
 
+    <div id="incomingCallModal" class="fixed inset-0 z-50 hidden items-center justify-center ic-backdrop">
+        <div class="ic-card">
+            <p class="ic-brand">WhatsApp</p>
+
+            <div class="ic-middle">
+                <div id="incomingCallAvatar" class="ic-avatar"></div>
+                <h3 id="incomingCallName" class="ic-name"></h3>
+                <p id="incomingCallNumber" class="ic-number"></p>
+                <p id="incomingCallSubtitle" class="ic-subtitle">Incoming voice call…</p>
+            </div>
+
+            <div class="ic-actions">
+                <button type="button" class="ic-btn ic-btn-decline" onclick="closeIncomingCallModal()" title="Decline">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26">
+                        <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.996.996 0 0 1-.29-.7c0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 3.67c.18.18.29.43.29.71 0 .27-.11.52-.29.7l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.51-.56-.9v-3.1A17.9 17.9 0 0 0 12 9z" transform="rotate(135 12 12)"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="rounded-xl bg-white p-5 shadow-sm">
         <div class="mb-4 flex gap-2">
             <button type="button" class="tab-btn w-auto rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-white" data-type="all" onclick="setCustomerTab('all', this)">All</button>
@@ -271,7 +292,7 @@
                                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                                 </svg>
                             </a>
-                            <form action="{{ route('admin.customers.send-whatsapp') }}" method="POST" class="inline-flex items-center gap-1">
+                            <form action="{{ route('admin.customers.send-whatsapp') }}" method="POST" class="inline-flex items-center gap-1" onsubmit="return sendRowWhatsapp(event, this)">
                                 @csrf
                                 <input type="hidden" name="number" value="{{ $contactItem->phone_number }}">
                                 <input type="hidden" name="message_id" class="js-message-id" value="{{ $contactItem->selectedmessage }}">
@@ -320,6 +341,59 @@
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
     <script>
         var csrfToken = '{{ csrf_token() }}';
+
+        function showToast(icon, message) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: icon,
+                title: message,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+
+        function sendRowWhatsapp(event, form) {
+            event.preventDefault();
+
+            var selectEl = form.querySelector('select[name="message"]');
+            if (!selectEl.value) return false;
+
+            var submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: new FormData(form)
+            })
+                .then(function (res) {
+                    return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+                })
+                .then(function (result) {
+                    if (result.ok) {
+                        var row = form.closest('tr');
+                        var sentAtCell = row ? row.children[5] : null;
+                        if (sentAtCell) sentAtCell.textContent = 'Just now';
+                        showToast('success', result.data.message || 'WhatsApp message sent successfully.');
+                    } else {
+                        showToast('error', result.data.message || 'Unable to send WhatsApp message.');
+                    }
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    showToast('error', 'Unable to send WhatsApp message. Please try again.');
+                })
+                .finally(function () {
+                    submitBtn.disabled = false;
+                });
+
+            return false;
+        }
 
         function updateSelectedMessage(selectEl) {
             var option = selectEl.options[selectEl.selectedIndex];
@@ -985,8 +1059,52 @@
                 closeCustomerModal();
                 closeMessageHistoryModal();
                 closeWhatsappChatModal();
+                closeIncomingCallModal();
             }
         });
+
+        var incomingCallActiveId = null;
+        var incomingCallDismissedId = null;
+
+        function closeIncomingCallModal() {
+            incomingCallDismissedId = incomingCallActiveId;
+            document.getElementById('incomingCallModal').classList.remove('flex');
+            document.getElementById('incomingCallModal').classList.add('hidden');
+        }
+
+        function pollIncomingCalls() {
+            fetch('{{ route('admin.customers.ringing-calls') }}', {
+                headers: { 'Accept': 'application/json' }
+            })
+                .then(function (res) { return res.ok ? res.json() : { calls: [] }; })
+                .then(function (data) {
+                    var call = (data.calls || [])[0] || null;
+
+                    if (!call) {
+                        incomingCallActiveId = null;
+                        incomingCallDismissedId = null;
+                        document.getElementById('incomingCallModal').classList.remove('flex');
+                        document.getElementById('incomingCallModal').classList.add('hidden');
+                        return;
+                    }
+
+                    incomingCallActiveId = call.id;
+                    if (call.id === incomingCallDismissedId) return;
+
+                    document.getElementById('incomingCallAvatar').textContent = getMessageHistoryInitials(call.name) || '?';
+                    document.getElementById('incomingCallName').textContent = call.name || 'Unknown caller';
+                    document.getElementById('incomingCallNumber').textContent = formatMessageHistoryPhone(call.number) || call.number || '';
+                    document.getElementById('incomingCallSubtitle').textContent = call.isVideo ? 'Incoming video call…' : 'Incoming voice call…';
+                    document.getElementById('incomingCallModal').classList.remove('hidden');
+                    document.getElementById('incomingCallModal').classList.add('flex');
+                })
+                .catch(function (err) {
+                    console.error(err);
+                });
+        }
+
+        pollIncomingCalls();
+        setInterval(pollIncomingCalls, 3000);
 
         var activeCustomerTab = 'all';
         var tabActiveClasses = ['bg-blue-600', 'text-white', 'border-blue-600'];
@@ -1074,6 +1192,105 @@
             text-decoration-style: dashed;
             text-decoration-color: #c3c9d4;
             text-underline-offset: 3px;
+        }
+
+        /* Incoming call modal (styled after WhatsApp desktop's call screen) */
+        .ic-backdrop {
+            background: rgba(11, 20, 26, 0.75);
+        }
+
+        .ic-card {
+            width: 380px;
+            height: 640px;
+            max-width: calc(100vw - 32px);
+            max-height: calc(100vh - 32px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(180deg, #202c33 0%, #111b21 100%);
+            border-radius: 12px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+            padding: 32px 24px 48px;
+            color: #e9edef;
+            font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+            text-align: center;
+        }
+
+        .ic-brand {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #8696a0;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .ic-middle {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        .ic-avatar {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: #00a884;
+            color: #ffffff;
+            font-size: 48px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 24px rgba(0, 168, 132, 0.35);
+        }
+
+        .ic-name {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: #e9edef;
+        }
+
+        .ic-number {
+            margin: 6px 0 0;
+            font-size: 14px;
+            color: #8696a0;
+        }
+
+        .ic-subtitle {
+            margin: 40px 0 0;
+            font-size: 14px;
+            color: #8696a0;
+        }
+
+        .ic-actions {
+            display: flex;
+            justify-content: center;
+        }
+
+        .ic-btn {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .ic-btn-decline {
+            background: #f15c6d;
+            color: #ffffff;
+        }
+
+        .ic-btn-decline:hover {
+            background: #e0495a;
         }
 
         /* Message history modal */
