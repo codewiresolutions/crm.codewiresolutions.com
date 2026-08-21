@@ -3,6 +3,7 @@
 @section('title', 'Login')
 
 @section('content')
+    <div class ="">
     <form action="{{ route('login') }}" method="POST" class="">
         @csrf
         <label class="mb-1 block text-sm font-medium text-gray-700">Email</label>
@@ -23,4 +24,5 @@
         Don't have an account?
         <a href="{{ route('register') }}" class="font-medium text-blue-600 no-underline hover:underline">Register</a>
     </p>
+    </div>
 @endsection

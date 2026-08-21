@@ -13,12 +13,16 @@
     @php $showModal = isset($contact) || $errors->any(); @endphp
 
     <div class="mb-4 flex items-center justify-between rounded-xl bg-white p-5 shadow-sm">
+        <div class="flex items-center gap-4">
+            <span class="bg-blue-50 text-blue-700 text-4xl h-14 w-14 flex items-center justify-center rounded-xl"><i class="ri-group-fill"></i></span>
+        
         <div>
             <h2 class="m-0 text-xl font-semibold">Customers</h2>
             <p class="text-sm text-gray-500">Create, update, and delete customer records.</p>
         </div>
+        </div>
         <div class="flex gap-2">
-            <button type="button" class="w-auto rounded-lg bg-blue-600 px-4.5 py-2.5 text-white hover:bg-blue-700" onclick="openCustomerModal()">+ Add Customer</button>
+            <button type="button" class="w-auto rounded-lg bg-blue-600 px-4.5 py-2.5 text-white hover:bg-blue-700 text-sm" onclick="openCustomerModal()"><i class="ri-user-add-line"></i> Add Customer</button>
         </div>
     </div>
 
@@ -172,17 +176,22 @@
 
     <div class="rounded-xl bg-white p-5 shadow-sm">
         <div class="mb-4 flex gap-2">
-            <button type="button" class="tab-btn w-auto rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-white" data-type="all" onclick="setCustomerTab('all', this)">All</button>
-            <button type="button" class="tab-btn w-auto rounded-md border border-gray-200 bg-gray-100 px-4 py-2 text-gray-700" data-type="individual" onclick="setCustomerTab('individual', this)">Individual</button>
-            <button type="button" class="tab-btn w-auto rounded-md border border-gray-200 bg-gray-100 px-4 py-2 text-gray-700" data-type="dealer" onclick="setCustomerTab('dealer', this)">Dealer</button>
-            <button type="button" class="tab-btn w-auto rounded-md border border-gray-200 bg-gray-100 px-4 py-2 text-gray-700" data-type="groups" onclick="setCustomerTab('groups', this)">Groups</button>
+            <button type="button" class="tab-btn w-auto rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-white text-sm font-medium" data-type="all" onclick="setCustomerTab('all', this)">All</button>
+            <button type="button" class="tab-btn w-auto rounded-md border border-gray-200 bg-gray-100 px-4 py-2 text-gray-700 text-sm font-medium" data-type="individual" onclick="setCustomerTab('individual', this)">Individual</button>
+            <button type="button" class="tab-btn w-auto rounded-md border border-gray-200 bg-gray-100 px-4 py-2 text-gray-700 text-sm font-medium" data-type="dealer" onclick="setCustomerTab('dealer', this)">Dealer</button>
+            <button type="button" class="tab-btn w-auto rounded-md border border-gray-200 bg-gray-100 px-4 py-2 text-gray-700 text-sm font-medium" data-type="groups" onclick="setCustomerTab('groups', this)">Groups</button>
         </div>
 
         <div id="customerListSection">
-        <div class="mb-4 flex gap-2">
-            <input type="text" id="customerSearch" placeholder="Search customers..." onkeyup="filterCustomers()" class="flex-1 rounded-lg border border-gray-300 px-3 py-2.5">
-            <a href="{{ route('admin.customers.export') }}" class="w-auto bg-cyan-600 px-4.5 py-2.5 text-white no-underline hover:bg-cyan-700">Export CSV</a>
-            <a href="{{ route('admin.customers.export-with-messages') }}" class="w-auto bg-cyan-600 px-4.5 py-2.5 text-white no-underline hover:bg-cyan-700">Export CSV with Msg</a>
+        <div class="mb-4 flex gap-4">
+            <div class="relative flex-1">
+            <div class="absolute inset-y-0 flex items-center pl-3 text-gray-400">
+            <i class="ri-search-line text-lg"></i>
+            </div>
+            <input type="text" id="customerSearch" placeholder="Search customers..."onkeyup="filterCustomers()" class="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-3 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <a href="{{ route('admin.customers.export') }}" class=" inline-flex items-center w-auto px-4 no-underline font-medium border border-gray-300 rounded-lg text-sm gap-1.5"><i class="ri-upload-2-line text-lg"></i>Export CSV</a>
+            <a href="{{ route('admin.customers.export-with-messages') }}" class="inline-flex gap-1.5 items-center w-auto rounded-lg bg-cyan-600 px-4 text-white no-underline hover:bg-cyan-700 text-sm font-medium"><i class="ri-whatsapp-line text-lg"></i>Export CSV with Msg</a>
 
         </div>
 
@@ -207,115 +216,424 @@
             <div id="bulkContactIdsContainer"></div>
             <input type="hidden" name="message_id" id="bulkMessageIdInput">
         </form>
+        <div class="rounded-xl border border-gray-100 bg-white shadow-sm w-full overflow-x-auto">
+            
+      <table id="customersTable" class="w-full border-collapse">
 
-        <table id="customersTable" class="w-full border-collapse">
-            <thead>
-                <tr>
-                    <th class="border-b border-gray-200 p-2.5 text-left"><input type="checkbox" id="selectAllCustomers" onchange="toggleSelectAllCustomers(this)"></th>
-                    <th class="border-b border-gray-200 p-2.5 text-left">Name</th>
-                    <th class="border-b border-gray-200 p-2.5 text-left ">C-Type</th>
-                    <th class="border-b border-gray-200 p-2.5 text-left">Email</th>
-                    <th class="border-b border-gray-200 p-2.5 text-left">Phone</th>
-{{--                    <th class="border-b border-gray-200 p-2.5 text-left">Description</th>--}}
+    <thead>
 
-                    <th class="border-b border-gray-200 p-2.5 text-left">Sent At</th>
-                    <th class="border-b border-gray-200 p-2.5 text-left">Calls</th>
-                    <th class="border-b border-gray-200 p-2.5 text-left">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($contacts as $contactItem)
-                    <tr data-user-type="{{ strtolower($contactItem->userType->name ?? '') }}" data-contact-id="{{ $contactItem->id }}" class="{{ $contactItem->is_interested ? 'row-interested' : '' }}">
-                        <td class="border-b border-gray-200 p-2.5">
-                            <input type="checkbox" class="customer-select-checkbox" value="{{ $contactItem->id }}" onchange="updateBulkWhatsappBar()">
-                        </td>
-                        <td class="border-b border-gray-200 p-2.5">
-                            <button
-                                type="button"
-                                class="message-history-btn border-none bg-transparent p-0 pb-1"
-                                onclick="openMessageHistoryModal({{ $contactItem->id }})"
+        <tr>
+
+            <th class="border-b border-gray-200 p-2.5 text-left">
+                <input
+                    type="checkbox"
+                    id="selectAllCustomers"
+                    onchange="toggleSelectAllCustomers(this)"
+                >
+            </th>
+
+            <th class="border-b border-gray-200 p-2.5 text-left">
+                Name
+            </th>
+
+            <th class="border-b border-gray-200 p-2.5 text-left">
+                C-Type
+            </th>
+
+            <th class="border-b border-gray-200 p-2.5 text-left">
+                Email
+            </th>
+
+            <th class="border-b border-gray-200 p-2.5 text-left">
+                Phone
+            </th>
+
+            {{-- <th class="border-b border-gray-200 p-2.5 text-left">
+                Description
+            </th> --}}
+
+            <th class="border-b border-gray-200 p-2.5 text-left">
+                Sent At
+            </th>
+
+            <th class="border-b border-gray-200 p-2.5 text-left">
+                Calls
+            </th>
+
+            <th class="border-b border-gray-200 p-3.5 text-left">
+                Actions
+            </th>
+
+        </tr>
+
+    </thead>
+
+
+    <tbody>
+
+        @foreach($contacts as $contactItem)
+
+            <tr
+                data-user-type="{{ strtolower($contactItem->userType->name ?? '') }}"
+                data-contact-id="{{ $contactItem->id }}"
+                class="{{ $contactItem->is_interested ? 'row-interested' : '' }}"
+            >
+
+                <!-- CHECKBOX -->
+                <td class="border-b border-gray-200 p-2.5">
+
+                    <input
+                        type="checkbox"
+                        class="customer-select-checkbox"
+                        value="{{ $contactItem->id }}"
+                        onchange="updateBulkWhatsappBar()"
+                    >
+
+                </td>
+
+
+                <!-- NAME -->
+                <td class="border-b border-gray-200 p-2.5">
+
+                    <button
+                        type="button"
+                        class="message-history-btn border-none bg-transparent p-0 pb-1"
+                        onclick="openMessageHistoryModal({{ $contactItem->id }})"
+                    >
+                        {{ $contactItem->name }}
+                    </button>
+
+                </td>
+
+
+                <!-- CUSTOMER TYPE -->
+                <td class="border-b border-gray-200 p-2.5">
+
+                    {{ $contactItem->userType->name ?? '' }}
+
+                </td>
+
+
+                <!-- EMAIL -->
+                <td class="border-b border-gray-200 p-2.5">
+
+                    {{ $contactItem->email ?? '------' }}
+
+                </td>
+
+
+                <!-- PHONE -->
+                <td
+                    class="border-b border-gray-200 p-2.5"
+                    title="Double-click to mark as interested"
+                    ondblclick="toggleInterested({{ $contactItem->id }}, this)"
+                >
+
+                    {{ $contactItem->phone_number }}
+
+                </td>
+
+
+                {{-- DESCRIPTION --}}
+                {{-- 
+                <td class="border-b border-gray-200 p-2.5">
+                    {{ $contactItem->description }}
+                </td>
+                --}}
+
+
+                <!-- SENT AT -->
+                <td class="border-b border-gray-200 p-2.5">
+
+                    {{ $contactItem->message_sent_at
+                        ? $contactItem->message_sent_at
+                        : 'Not sent yet'
+                    }}
+
+                </td>
+
+
+                <!-- CALLS -->
+                <td class="border-b border-gray-200 p-2.5">
+
+                    @php
+                        $callCount = $callCounts[$contactItem->id] ?? 0;
+                    @endphp
+
+                    <span
+                        class="call-count-badge {{ $callCount > 0 ? 'call-count-badge-active' : '' }}"
+                        title="{{ $callCount }} call(s)"
+                    >
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            width="12"
+                            height="12"
+                        >
+
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
+
+                        </svg>
+
+                        {{ $callCount }}
+
+                    </span>
+
+                </td>
+
+
+                <!-- ACTIONS -->
+                <!-- IMPORTANT: DO NOT PUT flex ON THE TD -->
+                <td class="whitespace-nowrap border-b border-gray-200 p-2.5">
+
+                    <div class="flex items-center gap-0.5">
+
+
+                        <!-- WHATSAPP CHAT -->
+                        <button
+                            type="button"
+                            title="WhatsApp Chat"
+                            class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg border-none bg-transparent p-0 text-emerald-600 hover:bg-emerald-50"
+                            onclick="openWhatsappChatModal({{ $contactItem->id }})"
+                        >
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="h-4.5 w-4.5"
                             >
-                                {{ $contactItem->name }}
-                            </button>
-                        </td>
-                        <td class="border-b border-gray-200 p-2.5 ">{{ $contactItem->userType->name ?? '' }}</td>
-                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->email ?? '------' }}</td>
-                        <td class="border-b border-gray-200 p-2.5" title="Double-click to mark as interested" ondblclick="toggleInterested({{ $contactItem->id }}, this)">{{ $contactItem->phone_number }}</td>
-{{--                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->description }}</td>--}}
 
-                        <td class="border-b border-gray-200 p-2.5">{{ $contactItem->message_sent_at ? $contactItem->message_sent_at : 'Not sent yet' }}</td>
-                        <td class="border-b border-gray-200 p-2.5">
-                            @php $callCount = $callCounts[$contactItem->id] ?? 0; @endphp
-                            <span class="call-count-badge {{ $callCount > 0 ? 'call-count-badge-active' : '' }}" title="{{ $callCount }} call(s)">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                                </svg>
-                                {{ $callCount }}
-                            </span>
-                        </td>
-                        <td class="flex items-center gap-0.5 whitespace-nowrap border-b border-gray-200 p-2.5">
-                            <button
-                                type="button"
-                                title="WhatsApp Chat"
-                                class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg border-none bg-transparent p-0 text-emerald-600 hover:bg-emerald-50"
-                                onclick="openWhatsappChatModal({{ $contactItem->id }})"
+                                <rect
+                                    x="7"
+                                    y="2"
+                                    width="10"
+                                    height="20"
+                                    rx="2"
+                                    ry="2"
+                                ></rect>
+
+                                <line
+                                    x1="11"
+                                    y1="18"
+                                    x2="13"
+                                    y2="18"
+                                ></line>
+
+                            </svg>
+
+                        </button>
+
+
+                        <!-- EDIT -->
+                        <a
+                            href="{{ route('admin.customers.edit', $contactItem) }}"
+                            title="Edit"
+                            class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg text-blue-600 no-underline hover:bg-blue-50"
+                        >
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="h-4.5 w-4.5"
                             >
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4.5 w-4.5">
-                                    <rect x="7" y="2" width="10" height="20" rx="2" ry="2"></rect>
-                                    <line x1="11" y1="18" x2="13" y2="18"></line>
+
+                                <path d="M12 20h9"></path>
+
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+
+                            </svg>
+
+                        </a>
+
+
+                        <!-- SEND WHATSAPP -->
+                        <form
+                            action="{{ route('admin.customers.send-whatsapp') }}"
+                            method="POST"
+                            class="inline-flex items-center gap-1"
+                        >
+
+                            @csrf
+
+                            <input
+                                type="hidden"
+                                name="number"
+                                value="{{ $contactItem->phone_number }}"
+                            >
+
+                            <input
+                                type="hidden"
+                                name="message_id"
+                                class="js-message-id"
+                                value="{{ $contactItem->selectedmessage }}"
+                            >
+
+                            <select
+                                name="message"
+                                required
+                                class="rounded-lg border border-gray-300 px-1.5 py-1.5 text-xs"
+                                onclick="event.stopPropagation()"
+                                data-update-url="{{ route('admin.customers.update-selected-message', $contactItem) }}"
+                                onchange="updateSelectedMessage(this)"
+                            >
+
+                                <option
+                                    value=""
+                                    disabled
+                                    {{ !$contactItem->selectedmessage ? 'selected' : '' }}
+                                >
+                                    Select message
+                                </option>
+
+                                @foreach($messages as $msg)
+
+                                    <option
+                                        value="{{ $msg->message }}"
+                                        data-id="{{ $msg->id }}"
+                                        {{ (int) $contactItem->selectedmessage === $msg->id ? 'selected' : '' }}
+                                    >
+                                        {{ $msg->title }}
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+
+                            <button
+                                type="submit"
+                                title="Send WhatsApp"
+                                class="inline-flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-lg border-none bg-transparent p-0 text-green-600 hover:bg-emerald-50"
+                            >
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                    class="h-4.5 w-4.5"
+                                >
+
+                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.472-.148-.67.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.372-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"></path>
+
+                                    <path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463.105.105 5.334.098 11.892c0 2.096.549 4.14 1.588 5.945L0 24l6.335-1.652a11.95 11.95 0 0 0 5.702 1.447h.005c6.585 0 11.943-5.335 11.95-11.893a11.82 11.82 0 0 0-3.472-8.453zM12.042 21.751h-.004a9.933 9.933 0 0 1-5.068-1.387l-.363-.215-3.759.982 1.003-3.649-.237-.375a9.9 9.9 0 0 1-1.527-5.276c.006-5.473 4.474-9.93 9.96-9.93a9.9 9.9 0 0 1 7.036 2.923 9.86 9.86 0 0 1 2.917 7.021c-.006 5.473-4.474 9.906-9.958 9.906z"></path>
+
                                 </svg>
+
                             </button>
-                            <a href="{{ route('admin.customers.edit', $contactItem) }}" title="Edit" class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg text-blue-600 no-underline hover:bg-blue-50">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4.5 w-4.5">
-                                    <path d="M12 20h9"></path>
-                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+
+                        </form>
+
+
+                        <!-- DELETE -->
+                        <form
+                            action="{{ route('admin.customers.destroy', $contactItem) }}"
+                            method="POST"
+                            class="inline"
+                            onsubmit="return confirmDelete(event);"
+                        >
+
+                            @csrf
+
+                            @method('DELETE')
+
+                            <button
+                                type="submit"
+                                title="Delete"
+                                class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg border-none bg-transparent p-0 text-red-600 hover:bg-red-50"
+                            >
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="h-4.5 w-4.5"
+                                >
+
+                                    <path d="M3 6h18"></path>
+
+                                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+
+                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+
+                                    <line
+                                        x1="10"
+                                        y1="11"
+                                        x2="10"
+                                        y2="17"
+                                    ></line>
+
+                                    <line
+                                        x1="14"
+                                        y1="11"
+                                        x2="14"
+                                        y2="17"
+                                    ></line>
+
                                 </svg>
-                            </a>
-                            <form action="{{ route('admin.customers.send-whatsapp') }}" method="POST" class="inline-flex items-center gap-1">
-                                @csrf
-                                <input type="hidden" name="number" value="{{ $contactItem->phone_number }}">
-                                <input type="hidden" name="message_id" class="js-message-id" value="{{ $contactItem->selectedmessage }}">
-                                <select name="message" required class="rounded-lg border border-gray-300 px-1.5 py-1.5 text-xs" onclick="event.stopPropagation()" data-update-url="{{ route('admin.customers.update-selected-message', $contactItem) }}" onchange="updateSelectedMessage(this)">
-                                    <option value="" disabled {{ !$contactItem->selectedmessage ? 'selected' : '' }}>Select message</option>
-                                    @foreach($messages as $msg)
-                                        <option value="{{ $msg->message }}" data-id="{{ $msg->id }}" {{ (int) $contactItem->selectedmessage === $msg->id ? 'selected' : '' }}>{{ $msg->title }}</option>
-                                    @endforeach
-                                </select>
-                                <button type="submit" title="Send WhatsApp" class="inline-flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-lg border-none bg-transparent p-0 text-green-600 hover:bg-emerald-50">
-                                    <svg viewBox="0 0 24 24" fill="currentColor" class="h-4.5 w-4.5">
-                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.472-.148-.67.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.372-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"></path>
-                                        <path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .105 5.334.098 11.892c0 2.096.549 4.14 1.588 5.945L0 24l6.335-1.652a11.95 11.95 0 0 0 5.702 1.447h.005c6.585 0 11.943-5.335 11.95-11.893a11.82 11.82 0 0 0-3.472-8.453zM12.042 21.751h-.004a9.933 9.933 0 0 1-5.068-1.387l-.363-.215-3.759.982 1.003-3.649-.237-.375a9.9 9.9 0 0 1-1.527-5.276c.006-5.473 4.474-9.93 9.96-9.93a9.9 9.9 0 0 1 7.036 2.923 9.86 9.86 0 0 1 2.917 7.021c-.006 5.473-4.474 9.906-9.958 9.906z"></path>
-                                    </svg>
-                                </button>
-                            </form>
-                            <form action="{{ route('admin.customers.destroy', $contactItem) }}" method="POST" class="inline" onsubmit="return confirmDelete(event);">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" title="Delete" class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg border-none bg-transparent p-0 text-red-600 hover:bg-red-50">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4.5 w-4.5">
-                                        <path d="M3 6h18"></path>
-                                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        @endforeach
+
+    </tbody>
+
+</table>
+
 
         <div class="mt-4">
+
             {{ $contacts->links() }}
-        </div>
+
         </div>
 
+        </div>
+
+
+
         <div id="groupsSection" class="hidden">
+
             @include('admin.partials.groups-table')
+
+        </div>
+
+    </div>
+    <!-- New Code -->
+    <!-- <div class="mt-4 flex flex-col items-center justify-between gap-3 px-2 text-xs text-gray-500 sm:flex-row">
+            <div>
+                Showing {{ $contacts->firstItem() ?? 0 }} to {{ $contacts->lastItem() ?? 0 }} of {{ $contacts->total() ?? 0 }} results
+            </div>
+            <div>
+                {{ $contacts->links() }}
+            </div>
         </div>
     </div>
+    <div id="groupsSection" class="hidden">
+        @include('admin.partials.groups-table')
+    </div>
+</div> -->
 
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
     <script>

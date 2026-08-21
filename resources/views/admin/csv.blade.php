@@ -3,22 +3,28 @@
 @section('title', 'CSV Import')
 
 @section('content')
+ 
     <div class="mb-4 rounded-xl bg-white p-5 shadow-sm">
+        <div class="flex items-center gap-4">
+            <span class="bg-purple-100 text-purple-900 px-3 py-2.5 rounded-xl text-3xl"><i class="ri-file-upload-line"></i></span>
+        <div>
         <h2 class="m-0 text-xl font-semibold">Import customers from CSV</h2>
-        <p class="mt-1 text-sm text-gray-500">Add customers in bulk. Your file needs a <strong class="text-gray-700">Name</strong> and a <strong class="text-gray-700">Contact Number</strong> column.</p>
+        <p class="mt-1 text-sm text-gray-500">Add customers in bulk. Your file needs a <strong class="text-purple-900">Name</strong> and a <strong class="text-purple-900">Contact Number</strong> column.</p></div>
+    </div>
 
         <form action="{{ route('admin.csv.store') }}" method="POST" enctype="multipart/form-data" id="csvUploadForm" class="mt-4">
             @csrf
             <input type="file" name="csv_file" id="csvFileInput" accept=".csv,text/csv" required class="hidden">
-            <label for="csvFileInput" id="csvDropzone" class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-300 px-6 py-10 text-center transition-colors hover:border-blue-400 hover:bg-blue-50/40">
-                <span class="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+            <label for="csvFileInput" id="csvDropzone" class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-300 px-6 py-10 text-center transition-colors hover:border-purple-400 hover:bg-purple-50/40">
+                <span class="flex h-11 w-11 items-center justify-center rounded-full bg-purple-100 text-purple-800">
+                    <i class="ri-upload-cloud-fill text-2xl"></i>
+                     <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
                         <path d="M12 3v12"></path>
                         <polyline points="7 8 12 3 17 8"></polyline>
                         <path d="M5 21h14a2 2 0 0 0 2-2v-4M3 15v4a2 2 0 0 0 2 2"></path>
-                    </svg>
+                    </svg> -->
                 </span>
-                <span class="text-sm text-gray-600" id="csvDropzoneLabel">Drag &amp; drop your CSV here, or <span class="font-medium text-blue-600 hover:underline">browse</span></span>
+                <span class="text-sm text-gray-600" id="csvDropzoneLabel">Drag  &amp; drop your CSV here, or <span class="font-medium text-purple-900 hover:underline">browse</span></span>
                 <span class="text-xs text-gray-400">.csv only &middot; up to 5 MB</span>
             </label>
         </form>

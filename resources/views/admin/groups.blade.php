@@ -3,59 +3,86 @@
 @section('title', 'Customer Groups')
 
 @section('content')
-    <div class="mb-4 flex items-center justify-between rounded-xl bg-white p-5 shadow-sm">
-        <div>
-            <h2 class="m-0 text-xl font-semibold">Customer Groups</h2>
-            <p class="text-sm text-gray-500">Groups are created automatically when you send a WhatsApp message to multiple selected customers at once from the Customers page.</p>
+    <div class="mb-4 flex items-start justify-between rounded-xl bg-white p-6 shadow-sm">
+        <div class="flex items-start gap-4">
+            <span class="bg-blue-100 mt-1.5 text-blue-600 px-3.5 py-3 rounded-xl text-3xl flex items-center justify-center"><i class="ri-group-fill"></i></span>
+            <div>
+            <h2 class="m-0 text-lg font-bold text-gray-900">Customer Groups</h2>
+            <p class="text-sm mt-1 text-gray-500 w-full max-w-120">Groups are created automatically when you send a WhatsApp message to multiple selected customers at once from the Customers page.</p>
+            <div class="mt-3 flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600">
+                    <i class="ri-history-line text-xs"></i> 0 Groups
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">
+                    <i class="ri-group-line text-xs"></i> Auto Generated
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-lg bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-600">
+                    <i class="ri-shield-flash-line text-xs"></i> Active System
+                </span>
         </div>
+        </div></div>
+        <div class="flex items-center gap-3">
+        <button type="button" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors">
+            <i class="ri-add-line text-sm"></i> New Group
+        </button></div>
     </div>
-
-    <div class="rounded-xl bg-white p-5 shadow-sm">
+    
+    <div class="rounded-xl bg-white px-5 shadow-sm text-sm ">
         @include('admin.partials.groups-table')
     </div>
 
-    <div class="mt-4 rounded-xl bg-white p-5 shadow-sm">
-        <h3 class="m-0 mb-1 text-lg font-semibold">Resend delay options</h3>
-        <p class="mb-4 text-sm text-gray-500">These are the choices offered in the "Resend in..." dropdown above.</p>
-
-        <table class="mb-4 w-full border-collapse">
-            <thead>
-                <tr>
-                    <th class="border-b border-gray-200 p-2.5 text-left">Label</th>
-                    <th class="border-b border-gray-200 p-2.5 text-left">Minutes</th>
-                    <th class="border-b border-gray-200 p-2.5 text-left">Actions</th>
+     <div class="mt-4 rounded-xl bg-white p-5 shadow-sm">
+        <div class="flex items-start gap-3">
+            <span class="flex-items-center justify-center mt-1 bg-blue-50 text-blue-700 rounded-lg px-3 py-2"><i class="ri-time-line  text-xl"></i></span>
+        <div>
+        <h3 class="m-0 font-semibold text-gray-900">Resend Delay Options</h3>
+        <p class="mb-4 text-sm text-gray-500">These are the choices offered in the "Resend in..." dropdown above.</p></div></div>
+       <div class="w-full overflow-x-auto">
+        <table class="w-full border-collapse text-left text-xs text-gray-600">
+            <thead class="bg-gray-50/50 uppercase tracking-wider text-[11px] text-gray-400">
+                <tr class="border-b border-gray-100 font-semibold">
+                    <th class="py-3 px-6">Label</th>
+                    <th class="py-3 px-6">Minutes</th>
+                    <th class="py-3 px-6 text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-gray-100">
                 @forelse($resendIntervals as $interval)
-                    <tr>
-                        <td class="border-b border-gray-200 p-2.5">{{ $interval->label }}</td>
-                        <td class="border-b border-gray-200 p-2.5">{{ $interval->minutes }}</td>
-                        <td class="border-b border-gray-200 p-2.5">
+                    @php
+                        $labelLower = strtolower($interval->label);
+                        $iconColor = str_contains($labelLower, 'hour') ? 'text-amber-500' : (str_contains($labelLower, 'day') ? 'text-purple-500' : 'text-blue-500');
+                    @endphp
+                    <tr class="hover:bg-gray-50/60 transition-colors">
+                        <td class="py-3 px-6 font-medium text-gray-900">
+                            <div class="flex items-center gap-2">
+                                <i class="ri-history-line {{ $iconColor }} text-sm"></i>
+                                <span>{{ $interval->label }}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-6 text-gray-600">
+                            {{ $interval->minutes }}
+                        </td>
+                        <td class="py-3 px-6 text-right">
                             <form action="{{ route('admin.resend-intervals.destroy', $interval) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" title="Remove" class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg border-none bg-transparent p-0 text-red-600 hover:bg-red-50">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4.5 w-4.5">
-                                        <path d="M3 6h18"></path>
-                                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
+                                <button type="submit" title="Remove" class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50">
+                                    <i class="ri-delete-bin-line text-sm"></i>
                                 </button>
                             </form>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="3" class="p-4 text-center text-sm text-gray-500">No delay options yet.</td>
+                        <td colspan="3" class="py-6 px-6 text-center text-gray-400">
+                            No resend delay options configured yet.
+                        </td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
-
-        <form action="{{ route('admin.resend-intervals.store') }}" method="POST" class="flex items-end gap-2">
+    </div>
+        <form action="{{ route('admin.resend-intervals.store') }}" method="POST" class="flex items-end gap-2 mt-3">
             @csrf
             <div>
                 <label class="block text-sm font-medium text-gray-700">Label</label>

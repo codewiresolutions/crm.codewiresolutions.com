@@ -4,21 +4,71 @@
 
 @section('content')
     @php $showModal = isset($message) || $errors->any(); @endphp
-
-    <div class="mb-4 rounded-xl bg-white p-5 shadow-sm">
-        <p><a href="https://webwhatsappjs.codewiresolutions.com/qr" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline">Open QR Code</a></p>
-        <h2 class="mt-2 text-xl font-semibold">WhatsApp</h2>
+    <div class="flex items-center bg-white p-5 shadow-sm mb-4 rounded-xl">
+        <span class="w-16 h-16 flex items-center justify-center bg-green-100 rounded-xl shrink-0 text-4xl"><i class="ri-whatsapp-line text-green-700"></i></span>
+        <div class="pl-5">
+        <h2 class="mt-2 text-xl font-semibold">Connect With WhatsApp</h2>
         <p class="text-sm text-gray-500">Scan Qr code connect with whatsapp</p>
+        <p><a href="https://webwhatsappjs.codewiresolutions.com/qr" target="_blank" class="inline-flex mt-3 text-white  bg-blue-600 gap-1 px-4 py-1.5 rounded-lg text-sm"><i class="ri-qr-code-line"></i>Open QR Code</a></p>
     </div>
+    </div> 
 
-    <div class="mb-4 flex items-center justify-between rounded-xl bg-white p-5 shadow-sm">
+
+    
+     <div class="rounded-xl bg-white p-5 shadow-sm mb-4">
+    <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4"> 
+        <span class="w-13 h-13 flex items-center justify-center bg-gray-100 rounded-full shrink-0 text-2xl"><i class="ri-message-2-line text-blue-600"></i>
+        </span>
         <div>
             <h3 class="m-0 text-lg font-semibold">Messages</h3>
             <p class="text-sm text-gray-500">Create, update, and delete WhatsApp message templates.</p>
         </div>
-        <button type="button" class="w-auto rounded-lg bg-blue-600 px-4.5 py-2.5 text-white hover:bg-blue-700" onclick="openMessageModal()">+ Add Message</button>
     </div>
+    <button type="button" class="w-auto rounded-lg bg-blue-600 px-3 py-2 text-white hover:bg-blue-700" onclick="openMessageModal()">
+        + Add Message
+    </button>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
+    <div class="flex items-center gap-3 rounded-xl bg-gray-50 p-4 shadow-sm">
+    <div class="flex h-11 w-11 items-center justify-center rounded-full bg-purple-100 text-purple-600 text-xl shrink-0">
+      <i class="ri-send-plane-fill"></i>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500 font-medium">Total Templates</p>
+      <h4 class="text-xl font-bold text-gray-800 m-0">0</h4>
+    </div>
+  </div>
+  <div class="flex items-center gap-3 rounded-xl bg-gray-50 p-4 shadow-sm">
+    <div class="flex h-11 w-11 items-center justify-center rounded-full bg-green-50 text-green-600 text-xl shrink-0">
+     <i class="ri-send-plane-fill"></i>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500 font-medium">Active Templates</p>
+      <h4 class="text-xl font-bold text-gray-800 m-0">0</h4>
+    </div>
+  </div>
+  <div class="flex items-center gap-3 rounded-xl bg-gray-50 p-4 shadow-sm">
+    <div class="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-600 text-xl shrink-0">
+      <i class="ri-pause-line"></i>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500 font-medium">Inactive Templates</p>
+      <h4 class="text-xl font-bold text-gray-800 m-0">0</h4>
+    </div>
+  </div>
+  <div class="flex items-center gap-3 rounded-xl bg-gray-50 p-4 shadow-sm">
+    <div class="flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-rose-600 text-xl shrink-0">
+      <i class="ri-delete-bin-line"></i>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500 font-medium">Deleted Templates</p>
+      <h4 class="text-xl font-bold text-gray-800 m-0">0</h4>
+    </div>
+  </div>
 
+</div>
+</div>
     <div id="messageModal" class="fixed inset-0 z-50 items-center justify-center bg-gray-900/50 {{ $showModal ? 'flex' : 'hidden' }}" onclick="if(event.target === this) closeMessageModal()">
         <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
             <div class="mb-3 flex items-center justify-between">
@@ -42,7 +92,19 @@
 
     <div class="rounded-xl bg-white p-5 shadow-sm">
         @if($messages->isEmpty())
-            <p class="text-sm text-gray-500">No messages saved yet.</p>
+             <div class="flex min-h-[250px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-purple-200 bg-white p-8">
+            <div class="relative mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-purple-50">
+                <div class="relative flex h-14 w-14 items-center justify-center rounded-xl bg-purple-100 text-purple-600">
+                    <i class="ri-message-3-line text-3xl"></i>
+                    <span class="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-purple-200 text-purple-700">
+                        <i class="ri-emotion-unhappy-line text-xs"></i>
+                    </span>
+                </div>
+            </div>
+            <h3 class="font-medium text-gray-700">No messages saved yet</h3>
+            <p class="mt-1 text-sm text-gray-400">You haven't created any WhatsApp message template.</p>
+            <p class="text-sm mt-1 text-gray-400">Click the <span class="text-blue-600 font-medium">"Add Message"</span> button to get started</p>
+        </div>
         @else
             <input type="text" id="messageSearch" placeholder="Search messages..." onkeyup="filterMessages()" class="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2.5">
             <table id="messagesTable" class="w-full border-collapse">
