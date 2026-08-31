@@ -12,9 +12,9 @@
 @section('content')
     @php $showModal = isset($contact) || $errors->any(); @endphp
 
-    <div class="mb-4 flex items-center justify-between rounded-xl bg-white p-5 shadow-sm">
-        <div class="flex items-center gap-4">
-            <span class="bg-blue-50 text-blue-700 text-4xl h-14 w-14 flex items-center justify-center rounded-xl"><i class="ri-group-fill"></i></span>
+    <div class="mb-4 md:flex items-center justify-between rounded-xl bg-white p-5 shadow-sm">
+        <div class="flex items-center gap-3">
+            <span class="bg-blue-50 text-blue-700 text-4xl h-14 w-20 sm:w-14 flex items-center justify-center rounded-xl"><i class="ri-group-fill"></i></span>
         
         <div>
             <h2 class="m-0 text-xl font-semibold">Customers</h2>
@@ -22,7 +22,7 @@
         </div>
         </div>
         <div class="flex gap-2">
-            <button type="button" class="w-auto rounded-lg bg-blue-600 px-4.5 py-2.5 text-white hover:bg-blue-700 text-sm" onclick="openCustomerModal()"><i class="ri-user-add-line"></i> Add Customer</button>
+            <button type="button" class="w-auto rounded-lg bg-blue-600 px-4.5 py-2.5 text-white md:mt-0 mt-4 hover:bg-blue-700 text-sm" onclick="openCustomerModal()"><i class="ri-user-add-line"></i> Add Customer</button>
         </div>
     </div>
 
@@ -175,7 +175,7 @@
     </div>
 
     <div class="rounded-xl bg-white p-5 shadow-sm">
-        <div class="mb-4 flex gap-2">
+        <div class="mb-4 flex flex-wrap gap-2">
             <button type="button" class="tab-btn w-auto rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-white text-sm font-medium" data-type="all" onclick="setCustomerTab('all', this)">All</button>
             <button type="button" class="tab-btn w-auto rounded-md border border-gray-200 bg-gray-100 px-4 py-2 text-gray-700 text-sm font-medium" data-type="individual" onclick="setCustomerTab('individual', this)">Individual</button>
             <button type="button" class="tab-btn w-auto rounded-md border border-gray-200 bg-gray-100 px-4 py-2 text-gray-700 text-sm font-medium" data-type="dealer" onclick="setCustomerTab('dealer', this)">Dealer</button>
@@ -183,15 +183,15 @@
         </div>
 
         <div id="customerListSection">
-        <div class="mb-4 flex gap-4">
-            <div class="relative flex-1">
+        <div class="mb-4 flex flex-col sm:flex-row sm:flex-wrap gap-4">
+            <div class="relative w-full sm:flex-1 flex-1">
             <div class="absolute inset-y-0 flex items-center pl-3 text-gray-400">
             <i class="ri-search-line text-lg"></i>
             </div>
             <input type="text" id="customerSearch" placeholder="Search customers..."onkeyup="filterCustomers()" class="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-3 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500">
             </div>
-            <a href="{{ route('admin.customers.export') }}" class=" inline-flex items-center w-auto px-4 no-underline font-medium border border-gray-300 rounded-lg text-sm gap-1.5"><i class="ri-upload-2-line text-lg"></i>Export CSV</a>
-            <a href="{{ route('admin.customers.export-with-messages') }}" class="inline-flex gap-1.5 items-center w-auto rounded-lg bg-cyan-600 px-4 text-white no-underline hover:bg-cyan-700 text-sm font-medium"><i class="ri-whatsapp-line text-lg"></i>Export CSV with Msg</a>
+            <a href="{{ route('admin.customers.export') }}" class=" inline-flex items-center w-auto px-4 no-underline font-medium border border-gray-300 rounded-lg text-sm gap-1.5 py-2"><i class="ri-upload-2-line text-lg"></i>Export CSV</a>
+            <a href="{{ route('admin.customers.export-with-messages') }}" class="inline-flex gap-1.5 items-center w-auto rounded-lg bg-cyan-600 px-4 text-white no-underline hover:bg-cyan-700 text-sm font-medium py-2 "><i class="ri-whatsapp-line text-lg"></i>Export CSV with Msg</a>
 
         </div>
 
@@ -278,9 +278,7 @@
                 data-contact-id="{{ $contactItem->id }}"
                 class="{{ $contactItem->is_interested ? 'row-interested' : '' }}"
             >
-
-                <!-- CHECKBOX -->
-                <td class="border-b border-gray-200 p-2.5">
+            <td class="border-b border-gray-200 p-2.5">
 
                     <input
                         type="checkbox"
@@ -290,10 +288,7 @@
                     >
 
                 </td>
-
-
-                <!-- NAME -->
-                <td class="border-b border-gray-200 p-2.5">
+            <td class="border-b border-gray-200 p-2.5">
 
                     <button
                         type="button"
@@ -304,26 +299,17 @@
                     </button>
 
                 </td>
-
-
-                <!-- CUSTOMER TYPE -->
-                <td class="border-b border-gray-200 p-2.5">
+            <td class="border-b border-gray-200 p-2.5">
 
                     {{ $contactItem->userType->name ?? '' }}
 
-                </td>
-
-
-                <!-- EMAIL -->
-                <td class="border-b border-gray-200 p-2.5">
+            </td>
+            <td class="border-b border-gray-200 p-2.5">
 
                     {{ $contactItem->email ?? '------' }}
 
-                </td>
-
-
-                <!-- PHONE -->
-                <td
+            </td>
+            <td
                     class="border-b border-gray-200 p-2.5"
                     title="Double-click to mark as interested"
                     ondblclick="toggleInterested({{ $contactItem->id }}, this)"
@@ -341,20 +327,15 @@
                 </td>
                 --}}
 
-
-                <!-- SENT AT -->
-                <td class="border-b border-gray-200 p-2.5">
+            <td class="border-b border-gray-200 p-2.5">
 
                     {{ $contactItem->message_sent_at
                         ? $contactItem->message_sent_at
                         : 'Not sent yet'
                     }}
 
-                </td>
-
-
-                <!-- CALLS -->
-                <td class="border-b border-gray-200 p-2.5">
+            </td>
+            <td class="border-b border-gray-200 p-2.5">
 
                     @php
                         $callCount = $callCounts[$contactItem->id] ?? 0;
@@ -385,17 +366,10 @@
                     </span>
 
                 </td>
-
-
-                <!-- ACTIONS -->
-                <!-- IMPORTANT: DO NOT PUT flex ON THE TD -->
-                <td class="whitespace-nowrap border-b border-gray-200 p-2.5">
+        <td class="whitespace-nowrap border-b border-gray-200 p-2.5">
 
                     <div class="flex items-center gap-0.5">
-
-
-                        <!-- WHATSAPP CHAT -->
-                        <button
+                    <button
                             type="button"
                             title="WhatsApp Chat"
                             class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg border-none bg-transparent p-0 text-emerald-600 hover:bg-emerald-50"
@@ -430,10 +404,7 @@
 
                             </svg>
 
-                        </button>
-
-
-                        <!-- EDIT -->
+                    </button>
                         <a
                             href="{{ route('admin.customers.edit', $contactItem) }}"
                             title="Edit"
@@ -457,10 +428,7 @@
                             </svg>
 
                         </a>
-
-
-                        <!-- SEND WHATSAPP -->
-                        <form
+                    <form
                             action="{{ route('admin.customers.send-whatsapp') }}"
                             method="POST"
                             class="inline-flex items-center gap-1"
@@ -533,10 +501,7 @@
 
                             </button>
 
-                        </form>
-
-
-                        <!-- DELETE -->
+                     </form>
                         <form
                             action="{{ route('admin.customers.destroy', $contactItem) }}"
                             method="POST"
@@ -619,21 +584,7 @@
 
         </div>
 
-    </div>
-    <!-- New Code -->
-    <!-- <div class="mt-4 flex flex-col items-center justify-between gap-3 px-2 text-xs text-gray-500 sm:flex-row">
-            <div>
-                Showing {{ $contacts->firstItem() ?? 0 }} to {{ $contacts->lastItem() ?? 0 }} of {{ $contacts->total() ?? 0 }} results
-            </div>
-            <div>
-                {{ $contacts->links() }}
-            </div>
-        </div>
-    </div>
-    <div id="groupsSection" class="hidden">
-        @include('admin.partials.groups-table')
-    </div>
-</div> -->
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
     <script>

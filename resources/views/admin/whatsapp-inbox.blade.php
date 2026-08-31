@@ -3,7 +3,7 @@
 @section('title', 'WhatsApp Messages')
 
 @section('content')
-    <div class="mb-4 flex items-center justify-between rounded-xl bg-white p-5 shadow-sm">
+    <div class="mb-4 md:flex items-center justify-between rounded-xl bg-white p-5 shadow-sm">
         <div class="flex items-center justify-between">
             <div class="flex items-center">
                 <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-green-600 text-white text-3xl">
@@ -22,7 +22,7 @@
             </p>
         </div>
 </div>
-        <a href="{{ route('admin.whatsapp-inbox') }}" class=" inline-flex w-auto rounded-lg bg-blue-600 px-4 py-2 text-sm text-white no-underline hover:bg-blue-700 gap-1"><i class="ri-loop-left-ai-line"></i>Refresh</a>
+        <a href="{{ route('admin.whatsapp-inbox') }}" class="inline-flex w-auto rounded-lg bg-blue-600 px-4 py-2 mt-4 md:mt-0 text-sm text-white no-underline hover:bg-blue-700 gap-1 ml-14 md:ml-0"><i class="ri-loop-left-ai-line"></i>Refresh</a>
     </div>
     @if($fetchFailed)
         <div class="mb-4 rounded-xl bg-red-50 p-5 text-red-700 shadow-sm">

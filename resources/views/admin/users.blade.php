@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="mb-4 rounded-xl bg-white p-5 shadow-sm">
-        <div class="flex items-start justify-between">
+        <div class="md:flex items-start justify-between">
         <div class="flex items-center gap-4">
             <span class="bg-blue-50 text-blue-700 px-2.5 py-2 rounded-xl text-3xl flex items-center justify-center"><i class="ri-user-add-fill"></i></span>
         <div>
@@ -12,13 +12,13 @@
         <p class="text-sm text-gray-500">Activate accounts and manage roles.</p>
     </div>
 </div>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 mt-4 md:mt-0">
         <button type="button" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700">
             <i class="ri-user-add-line"></i> Invite User
         </button></div>
         </div>
-        <div class="flex flex-cols-1 sm:flex-cols-2 lg:flex-cols-3 gap-4 my-6">
-        <div class="flex gap-3 rounded-xl bg-slate-50/50 p-4 shadow-xs border border-slate-200 w-full max-w-50">
+        <div class="flex flex-wrap gap-4 my-6">
+        <div class="flex gap-3 rounded-xl bg-slate-50/50 p-4 shadow-xs border border-slate-200 w-[200px]">
         <div class="flex items-center justify-center px-2.5 py-1 rounded-full bg-blue-100 text-blue-500 text-2xl shrink-0"><i class="ri-user-add-line"></i>
     </div>
     <div>
@@ -26,7 +26,7 @@
         <h4 class="text-xl font-bold m-0">0</h4>
     </div>
   </div>
-  <div class="flex gap-3 rounded-xl bg-slate-50/50 p-4 shadow-xs border border-slate-200 w-full max-w-50">
+  <div class="flex gap-3 rounded-xl bg-slate-50/50 p-4 shadow-xs border border-slate-200 w-[200px]">
         <div class="flex items-center justify-center bg-green-100 px-2.5 py-1 rounded-full text-green-600 text-2xl shrink-0"><i class="ri-checkbox-circle-fill"></i>
     </div>
     <div>
@@ -34,7 +34,7 @@
         <h4 class="text-xl font-bold m-0">0</h4>
     </div>
   </div>
-  <div class="flex gap-3 rounded-xl bg-slate-50/50 p-4 shadow-xs border border-slate-200 w-full max-w-50">
+  <div class="flex gap-3 rounded-xl bg-slate-50/50 p-4 shadow-xs border border-slate-200 w-[200px]">
         <div class="flex items-center justify-center bg-purple-100 px-2.5 py-1 rounded-full text-purple-400 text-2xl shrink-0"><i class="ri-user-unfollow-line"></i>
     </div>
     <div>
@@ -45,8 +45,7 @@
   </div>
 </div>
 
-    <div class="rounded-xl bg-white p-5 shadow-sm">
-        <!-- <div class="rounded-lg bg-white shadow-sm"> -->
+        <div class="rounded-xl bg-white p-5 shadow-sm overflow-x-auto">
         <table class="w-full border-collapse">
             <thead class="text-sm bg-gray-100">
                 <tr>
@@ -100,6 +99,6 @@
                 @endforeach
             </tbody>
         </table>
-        <!-- </div> -->
+        
     </div>
 @endsection

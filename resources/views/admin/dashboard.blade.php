@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="bg-gradient-to-r from-slate-900 to-blue-900 rounded-xl p-5">
-    <div class="flex justify-between items-start">
+    <div class="md:flex justify-between items-start">
         <div>
             <i class="ri-chat-3-line text-blue-600 px-2 py-2 rounded-lg bg-blue-950/70 text-xl"></i>
             <h1 class="text-2xl font-bold text-white mt-4">Welcome back, Admin!</h1>
@@ -12,7 +12,7 @@
               Manage WhatsApp communication and customer data from one place.
             </p>
         </div>
-        <span class="flex items-center gap-2 bg-gray-800/40 text-white px-3 py-2 rounded-full text-xs font-medium mt-10">
+        <span class="w-fit flex items-center gap-2 bg-gray-700/40 text-white px-3 py-2 rounded-full text-xs font-medium mt-6 md:mt-10">
             <span class="w-2 h-2 bg-green-500 rounded-full"></span>
             All systems operational
         </span>
@@ -48,11 +48,7 @@
 
 
 <div class="space-y-6 font-sans">
-
-  <!-- CHARTS ROW -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-    <!-- REVENUE CHART CARD -->
     <div class="bg-white border border-white rounded-xl p-5 flex flex-col justify-between mt-6">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-base font-semibold">Revenue</h3>
@@ -67,18 +63,15 @@
         <canvas id="revenueChart"></canvas>
       </div>
     </div>
-
-    <!-- PIPELINE CHART CARD -->
     <div class="bg-white border border-white rounded-xl p-5 relative mt-6">
       <h3 class="text-base font-semibold mb-2">Pipeline</h3>
       
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Horizontal Bar Chart -->
         <div class="md:col-span-2 relative h-48 w-full">
           <canvas id="pipelineChart"></canvas>
         </div>
 
-        <!-- Total Pipeline Stats Side Card -->
+       
         <div class="flex flex-col justify-center items-start md:items-end pr-2">
           <span class="text-[#8b85a1] text-xs font-medium mb-1">Total Pipeline</span>
           <span class="text-2xl font-bold mb-1">$854k</span>
@@ -94,18 +87,17 @@
   </div>
 
 
-  <!--TABLES ROW-->
+  
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-    <!-- RECENT DEALS CARD -->
-    <div class="bg-white border border-white rounded-xl p-5">
+    <div class="bg-white border border-white rounded-xl p-5 overflow-x-auto">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-base font-semibold">Recent Deals</h3>
         <a href="#" class="text-purple-800 hover:text-purple-500 text-xs font-medium">View all</a>
       </div>
 
       <div class="space-y-3">
-        <!-- Item 1 -->
+      
         <div class="flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 transition-colors">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-[#1f1535] border border-[#352358] flex items-center justify-center text-purple-400">
@@ -126,7 +118,6 @@
           </div>
         </div>
 
-        <!-- Item 2 -->
         <div class="flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 transition-colors">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-[#1f1535] border border-[#352358] flex items-center justify-center text-purple-400">
@@ -147,7 +138,6 @@
           </div>
         </div>
 
-        <!-- Item 3 -->
         <div class="flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 transition-colors">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-[#1f1535] border border-[#352358] flex items-center justify-center text-purple-400">
@@ -169,8 +159,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 4. TOP CONTACTS CARD -->
     <div class="bg-white border border-white rounded-xl p-5">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-base font-semibold">Top Contacts</h3>
@@ -178,7 +166,7 @@
       </div>
 
       <div class="space-y-3">
-        <!-- Contact 1 -->
+      
         <div class="flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 transition-colors">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-[#271d43] border border-[#3e2e6b] text-purple-200 text-xs font-semibold flex items-center justify-center">
@@ -199,7 +187,6 @@
           </div>
         </div>
 
-        <!-- Contact 2 -->
         <div class="flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 transition-colors">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-[#271d43] border border-[#3e2e6b] text-purple-200 text-xs font-semibold flex items-center justify-center">
@@ -220,7 +207,6 @@
           </div>
         </div>
 
-        <!-- Contact 3 -->
         <div class="flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 transition-colors">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-[#271d43] border border-[#3e2e6b] text-purple-200 text-xs font-semibold flex items-center justify-center">
@@ -247,14 +233,11 @@
 
 </div>
 
-<!-- JAVASCRIPT FOR CHARTS -->
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   function initializeDashboardCharts() {
     if (typeof Chart === 'undefined') return;
 
-    // REVENUE LINE CHART
     const revCanvas = document.getElementById('revenueChart');
     if (revCanvas) {
       const revCtx = revCanvas.getContext('2d');
@@ -297,8 +280,6 @@
         }
       });
     }
-
-    // PIPELINE BAR CHART
     const pipeCanvas = document.getElementById('pipelineChart');
     if (pipeCanvas) {
       const pipeCtx = pipeCanvas.getContext('2d');

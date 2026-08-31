@@ -16,7 +16,7 @@
 
     
      <div class="rounded-xl bg-white p-5 shadow-sm mb-4">
-    <div class="flex items-center justify-between">
+    <div class="md:flex items-center justify-between">
     <div class="flex items-center gap-4"> 
         <span class="w-13 h-13 flex items-center justify-center bg-gray-100 rounded-full shrink-0 text-2xl"><i class="ri-message-2-line text-blue-600"></i>
         </span>
@@ -25,7 +25,7 @@
             <p class="text-sm text-gray-500">Create, update, and delete WhatsApp message templates.</p>
         </div>
     </div>
-    <button type="button" class="w-auto rounded-lg bg-blue-600 px-3 py-2 text-white hover:bg-blue-700" onclick="openMessageModal()">
+    <button type="button" class="w-auto rounded-lg bg-blue-600 mt-5 md:mt-0 ml-16 md:ml-0 px-3 py-2 text-white hover:bg-blue-700" onclick="openMessageModal()">
         + Add Message
     </button>
     </div>

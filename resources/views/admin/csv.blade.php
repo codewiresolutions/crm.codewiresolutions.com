@@ -18,11 +18,6 @@
             <label for="csvFileInput" id="csvDropzone" class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-300 px-6 py-10 text-center transition-colors hover:border-purple-400 hover:bg-purple-50/40">
                 <span class="flex h-11 w-11 items-center justify-center rounded-full bg-purple-100 text-purple-800">
                     <i class="ri-upload-cloud-fill text-2xl"></i>
-                     <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
-                        <path d="M12 3v12"></path>
-                        <polyline points="7 8 12 3 17 8"></polyline>
-                        <path d="M5 21h14a2 2 0 0 0 2-2v-4M3 15v4a2 2 0 0 0 2 2"></path>
-                    </svg> -->
                 </span>
                 <span class="text-sm text-gray-600" id="csvDropzoneLabel">Drag  &amp; drop your CSV here, or <span class="font-medium text-purple-900 hover:underline">browse</span></span>
                 <span class="text-xs text-gray-400">.csv only &middot; up to 5 MB</span>

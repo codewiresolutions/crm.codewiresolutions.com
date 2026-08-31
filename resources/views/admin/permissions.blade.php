@@ -12,8 +12,8 @@
         <h2 class="m-0 text-xl text-slate-800 font-semibold">Menu Permissions</h2>
         <p class="text-sm text-gray-500 w-full max-w-120">Choose which sidebar menus are visible to Manager and User roles. Admins always see everything.</p>
        </div></div>
-        <div class="flex flex-cols-1 sm:flex-cols-2 lg:flex-cols-3 gap-4 my-6">
-        <div class="flex gap-3 rounded-xl shadow-xs p-4 w-full max-w-50 border border-gray-100 hover:bg-gray-50/50">
+        <div class="flex flex-wrap gap-4 my-6">
+        <div class="flex gap-3 rounded-xl shadow-xs p-4 w-[200px] border border-gray-100 hover:bg-gray-50/50">
         <div class="flex items-center justify-center bg-blue-50 px-2.5 rounded-xl py-1 text-blue-500 text-2xl shrink-0"><i class="ri-function-line"></i>
     </div>
     <div>
@@ -21,7 +21,7 @@
         <h4 class="text-xl font-bold m-0">0</h4>
     </div>
   </div>
-  <div class="flex gap-3 rounded-xl p-4 shadow-xs w-full max-w-50 border border-gray-100 hover:bg-gray-50/50">
+  <div class="flex gap-3 rounded-xl p-4 shadow-xs w-[200px] border border-gray-100 hover:bg-gray-50/50">
         <div class="flex items-center justify-center  bg-green-50 px-2.5 rounded-xl py-1 text-green-600 text-2xl shrink-0"><i class="ri-group-line"></i>
     </div>
     <div>
@@ -29,7 +29,7 @@
         <h4 class="text-xl font-bold m-0">0</h4>
     </div>
   </div>
-  <div class="flex gap-3 rounded-xl p-4 shadow-xs w-full max-w-50 border border-gray-100 hover:bg-gray-50/50">
+  <div class="flex gap-3 rounded-xl p-4 shadow-xs w-[200px] border border-gray-100 hover:bg-gray-50/50">
         <div class="flex items-center justify-center bg-purple-50 px-2.5 py-1 rounded-xl text-purple-800 text-2xl shrink-0"><i class="ri-shield-check-line"></i>
     </div>
     <div>
@@ -58,7 +58,6 @@
                     <tbody class="divide-y divide-gray-100">
                         @foreach($menuKeys as $menuKey)
                             <tr class="hover:bg-gray-50/50 transition-colors">
-                                <!-- Menu Name with Icon -->
                                 <td class="py-3.5 px-4 font-medium text-gray-800">
                                     <div class="flex items-center gap-3">
                                         <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 text-sm">
@@ -77,8 +76,6 @@
                                         <span>{{ ucwords(str_replace('-', ' ', $menuKey)) }}</span>
                                     </div>
                                 </td>
-
-                                <!-- Role Checkboxes -->
                                 @foreach($roles as $role)
                                     @php
                                         $isVisible = optional($permissions->get($role, collect())->firstWhere('menu_key', $menuKey))->is_visible ?? false;
