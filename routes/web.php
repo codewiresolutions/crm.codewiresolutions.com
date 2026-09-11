@@ -47,6 +47,7 @@ Route::middleware(['auth', 'active', 'role:admin,manager,user'])->prefix('admin'
         Route::get('/customers', [ContactController::class, 'index'])->name('customers.index');
         Route::get('/customers/export', [ContactController::class, 'export'])->name('customers.export');
         Route::get('/customers/export-with-messages', [ContactController::class, 'exportWithMessages'])->name('customers.export-with-messages');
+        Route::get('/customers/ringing-calls', [ContactController::class, 'ringingCalls'])->name('customers.ringing-calls');
         Route::post('/customers', [ContactController::class, 'store'])->name('customers.store');
         Route::post('/customers/send-whatsapp', [ContactController::class, 'sendWhatsapp'])->name('customers.send-whatsapp');
         Route::post('/customers/send-whatsapp-media', [ContactController::class, 'sendWhatsappMedia'])->name('customers.send-whatsapp-media');
