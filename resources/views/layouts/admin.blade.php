@@ -50,6 +50,10 @@
             @if(auth()->user()->canViewMenu('csv'))
                 <a href="{{ route('admin.csv.index') }}" class="rounded-lg px-3 py-2 text-gray-300 no-underline {{ request()->routeIs('admin.csv.*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}"><i class="ri-file-add-line mr-2 text-lg"></i>CSV Import</a>
             @endif
+            @if(auth()->user()->canViewMenu('items'))
+                <div class="px-2.5 py-1.5 text-xs font-bold text-gray-400">ITEMS</div>
+                <a href="{{ route('admin.items.index') }}" class="rounded-lg px-3 py-2 text-gray-300 no-underline {{ request()->routeIs('admin.items.*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}"><i class="ri-box-3-line mr-2 text-lg"></i>Items</a>
+            @endif
             @if(auth()->user()->hasRole('admin', 'manager'))
                 <div class="px-2.5 py-1.5 text-xs font-bold text-gray-400">ADMIN</div>
                 <a href="{{ route('admin.users.index') }}" class="rounded-lg px-3 py-2 text-gray-300 no-underline {{ request()->routeIs('admin.users.*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}"><i class="ri-user-add-line mr-2 text-lg"></i>Users</a>
@@ -57,6 +61,7 @@
             @if(auth()->user()->hasRole('admin', 'manager'))
                 <a href="{{ route('admin.permissions.edit') }}" class="rounded-lg px-3 py-2 text-gray-300 no-underline {{ request()->routeIs('admin.permissions.*') ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 hover:text-white' }}"><i class="ri-lock-2-line mr-2 text-lg"></i>Permissions</a>
             @endif
+            
         </nav>
         <div class="mt-auto border-t border-slate-700 pt-3 md:hidden">
 
